@@ -1,23 +1,20 @@
-# Source files
-SRC = main.cpp image.cpp
+# Source files in src/ directory
+SRC := $(wildcard src/*.cpp)
 
-# Header files
-HDR = image.hpp point.hpp
-
-# Compiler
+# Build directory, compiler and compiler tags
+BUILD := build
 CC = g++
+CFLAGS = -Wall -std=c++11 -I include/ -I lib/ -I lib/glm-1.0.1/
 
-# Compiler flags
-CFLAGS = -Wall -std=c++11
-
-# Object files
+# Object files in build/ directory
 OBJ = $(SRC:.cpp=.o)
+OBJ := $(subst src/, $(BUILD)/, $(OBJ))
 
 # Executable
-EXE = build/main
+EXE = $(BUILD)/raytracer
 
 # Output image
-OUT = build/output.ppm
+OUT = $(BUILD)/output.ppm
 
 # Build
 all: $(EXE)
@@ -27,14 +24,18 @@ $(EXE): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
 # Compile
-%.o: %.cpp $(HDR)
+$(BUILD)/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# Clean
 clean:
-	rm -f *.o build/*
+	rm -f *.o $(BUILD)/*
 
-# Run
+debug:
+	@echo CFLAGS = $(CFLAGS)
+	@echo SRC = $(SRC)
+	@echo OBJ = $(OBJ)
+
 run: $(EXE)
 	./$(EXE) > $(OUT) && open $(OUT)
 

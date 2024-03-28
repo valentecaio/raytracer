@@ -1,19 +1,20 @@
-# Source files in src/ directory
-SRC := $(wildcard src/*.cpp)
-
-# Build directory, compiler and compiler tags
+# Source and build directory, compiler and compiler tags
+SRCDIR := src
 BUILD := build
 CC = g++
 CFLAGS = -Wall -std=c++11 -I include/ -I lib/ -I lib/glm-1.0.1/
 
+# Source files in src/ directory
+SRC := $(wildcard $(SRCDIR)/*.cpp)
+
 # Object files in build/ directory
 OBJ = $(SRC:.cpp=.o)
-OBJ := $(subst src/, $(BUILD)/, $(OBJ))
+OBJ := $(subst $(SRCDIR)/, $(BUILD)/, $(OBJ))
 
-# Executable
+# Main executable filepath
 EXE = $(BUILD)/raytracer
 
-# Output image
+# Output image filepath
 OUT = $(BUILD)/output.ppm
 
 # Build
@@ -24,7 +25,7 @@ $(EXE): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
 # Compile
-$(BUILD)/%.o: src/%.cpp
+$(BUILD)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -39,7 +40,6 @@ debug:
 run: $(EXE)
 	./$(EXE) > $(OUT) && open $(OUT)
 
-# Phony targets
 .PHONY: all clean run
 
 # EOF

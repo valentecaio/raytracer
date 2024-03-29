@@ -9,19 +9,16 @@
 int main() {
   int image_width = 800;
   int image_height = 600;
-  std::vector<std::vector<raytracer::Point>> points;
+  std::vector<std::vector<raytracer::point3>> points;
 
-  // Generate random points
   for (int j = 0; j < image_height; ++j) {
-    points.push_back(std::vector<raytracer::Point>());
+    points.push_back(std::vector<raytracer::point3>());
     for (int i = 0; i < image_width; ++i) {
-      points[j].push_back(raytracer::Point(rand() % 256, rand() % 256, rand() % 256));
+      points[j].push_back(raytracer::point3(rand() % 256, rand() % 256, rand() % 256));
     }
   }
 
-  // Generate and output the image
-  raytracer::Image image(image_width, image_height);
-  image.generateImage(points);
+  raytracer::write_image(image_width, image_height, points);
 
   return 0;
 }

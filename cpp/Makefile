@@ -1,8 +1,17 @@
+### Variables ###
+
 # Source and build directory, compiler and compiler tags
 SRCDIR := src
 BUILD := build
 CC = g++
 CFLAGS = -Wall -std=c++11 -I include/ -I lib/ -I lib/glm-1.0.1/
+
+# Main executable and output image filepaths
+EXE = $(BUILD)/raytracer
+OUT = $(BUILD)/output.ppm
+
+
+### Automatic variables ###
 
 # Source files in src/ directory
 SRC := $(wildcard $(SRCDIR)/*.cpp)
@@ -11,11 +20,8 @@ SRC := $(wildcard $(SRCDIR)/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 OBJ := $(subst $(SRCDIR)/, $(BUILD)/, $(OBJ))
 
-# Main executable filepath
-EXE = $(BUILD)/raytracer
 
-# Output image filepath
-OUT = $(BUILD)/output.ppm
+### Rules ###
 
 # Build
 all: $(EXE)
@@ -34,6 +40,8 @@ clean:
 
 debug:
 	@echo CFLAGS = $(CFLAGS)
+	@echo EXE = $(EXE)
+	@echo OUT = $(OUT)
 	@echo SRC = $(SRC)
 	@echo OBJ = $(OBJ)
 

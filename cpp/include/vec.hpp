@@ -1,12 +1,13 @@
-#ifndef POINT_H
-#define POINT_H
+#ifndef VEC_H
+#define VEC_H
 
 #include <glm/glm.hpp>
 
 namespace raytracer {
 
-using point3 = glm::dvec3;
 using vec3 = glm::dvec3;
+using point3 = glm::dvec3;
+using colour3 = glm::dvec3;
 
 } // namespace raytracer
 

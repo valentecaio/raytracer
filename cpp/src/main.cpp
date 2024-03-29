@@ -3,15 +3,17 @@
 #include <iostream>
 #include <vector>
 
-#include "image.hpp"
-#include "point.hpp"
 #include "defines.hpp"
+#include "image.hpp"
 #include "ray.hpp"
+#include "vec.hpp"
 
 using namespace raytracer;
 
 colour3 ray_color(const ray& r) {
-  return colour3(0,0,0);
+  vec3 unit_direction = glm::normalize(r.direction());
+  auto a = 0.5*(unit_direction.y + 1.0);
+  return (1.0-a)*colour3(255, 255, 255) + a*colour3(127, 200, 255);
 }
 
 int main() {
@@ -37,6 +39,7 @@ int main() {
   auto camera_center = point3(0, 0, 0);
 
   // the vectors vu and vv define the viewport in the world coordinates
+  // the viewport is centered at the camera, and the camera is looking towards the negative z-axis
   auto viewport_u = vec3(viewport_width, 0, 0);
   auto viewport_v = vec3(0, -viewport_height, 0);
 
@@ -59,12 +62,10 @@ int main() {
       auto pixel_center = pixel00_loc + (static_cast<double>(i) * pixel_delta_u) + (static_cast<double>(j) * pixel_delta_v);
       auto ray_direction = pixel_center - camera_center;
       ray r(camera_center, ray_direction);
-      colour3 pixel_color = ray_color(r);
-      pixels[j].push_back(pixel_color);
+      pixels[j].push_back(ray_color(r));
     }
   }
   write_image(image_width, image_height, pixels);
 
   return 0;
 }
-

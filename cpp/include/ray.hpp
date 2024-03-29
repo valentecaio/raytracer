@@ -1,9 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include <glm/glm.hpp>
-
-#include "point.hpp"
+#include "vec.hpp"
 
 namespace raytracer {
 

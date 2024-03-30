@@ -15,9 +15,10 @@ double hit_sphere(const point3& center, double radius, const ray& ray) {
   // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
   vec3 oc = ray.origin() - center;                     // oc = A-C
   auto a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
-  auto b = 2.0 * glm::dot(oc, ray.direction());        // b = 2*dot(oc, B)
-  auto c = glm::dot(oc, oc) - radius*radius;           // c = dot(oc, oc) - R*R
-  double delta = b*b - 4*a*c;                          // delta = b*b - 4*a*c
+  auto half_b = glm::dot(oc, ray.direction());         // b = 2*dot(oc, B)
+  auto oc_length_squared = glm::dot(oc, oc);
+  auto c = oc_length_squared - radius*radius;          // c = dot(oc, oc) - R*R
+  auto delta = half_b*half_b - a*c;                    // delta = b*b - 4*a*c
 
   // if delta is negative, there are no real roots
   // if delta is zero, there is one real root
@@ -25,7 +26,8 @@ double hit_sphere(const point3& center, double radius, const ray& ray) {
   if (delta < 0) {
     return -1.0;
   } else {
-    return (-b - glm::sqrt(delta)) / (2.0*a);
+    // the division by 2 was already done in the calculation of half_b
+    return (-half_b - sqrt(delta) ) / a;
   }
 }
 

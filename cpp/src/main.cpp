@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <glm/glm.hpp>
 
 #include "defines.hpp"
 #include "image.hpp"
@@ -10,14 +11,38 @@
 
 using namespace raytracer;
 
+double hit_sphere(const point3& center, double radius, const ray& ray) {
+  // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
+  vec3 oc = ray.origin() - center;                     // oc = A-C
+  auto a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
+  auto b = 2.0 * glm::dot(oc, ray.direction());        // b = 2*dot(oc, B)
+  auto c = glm::dot(oc, oc) - radius*radius;           // c = dot(oc, oc) - R*R
+  double delta = b*b - 4*a*c;                          // delta = b*b - 4*a*c
+
+  // if delta is negative, there are no real roots
+  // if delta is zero, there is one real root
+  // if delta is positive, there are two real roots and we return the smallest one
+  if (delta < 0) {
+    return -1.0;
+  } else {
+    return (-b - glm::sqrt(delta)) / (2.0*a);
+  }
+}
+
 colour3 ray_color(const ray& r) {
+  auto t = hit_sphere(point3(0,0,-1), 0.5, r);
+  if (t > 0.0) {
+    vec3 normal = glm::normalize(r.at(t) - vec3(0,0,-1));   // normal = (P-C)/R
+    return 0.5*colour3(normal.x+1, normal.y+1, normal.z+1); // normal is in the range [-1, 1]
+  }
+
   vec3 unit_direction = glm::normalize(r.direction());
   auto a = 0.5*(unit_direction.y + 1.0);
-  return (1.0-a)*colour3(255, 255, 255) + a*colour3(127, 200, 255);
+  return (1.0 - a)*colour3(1, 1, 1) + a*colour3(0.5, 0.7, 1); // linear interpolation
 }
 
 int main() {
-  // the image has a locked aspect ratio of 16:9, we calculate the height based on the width
+  // the image has a locked aspect ratio of 16:9, the height is calculated based on the width
   // it has to be at least 1 because we can't have an image with 0 height
   int image_width = 800;
   auto aspect_ratio = 16.0 / 9.0;

@@ -5,37 +5,19 @@
 #include <glm/glm.hpp>
 
 #include "defines.hpp"
+#include "sphere.hpp"
 #include "image.hpp"
 #include "ray.hpp"
 #include "vec.hpp"
 
 using namespace raytracer;
 
-double hit_sphere(const point3& center, double radius, const ray& ray) {
-  // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
-  vec3 oc = ray.origin() - center;                     // oc = A-C
-  auto a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
-  auto half_b = glm::dot(oc, ray.direction());         // b = 2*dot(oc, B)
-  auto oc_length_squared = glm::dot(oc, oc);
-  auto c = oc_length_squared - radius*radius;          // c = dot(oc, oc) - R*R
-  auto delta = half_b*half_b - a*c;                    // delta = b*b - 4*a*c
-
-  // if delta is negative, there are no real roots
-  // if delta is zero, there is one real root
-  // if delta is positive, there are two real roots and we return the smallest one
-  if (delta < 0) {
-    return -1.0;
-  } else {
-    // the division by 2 was already done in the calculation of half_b
-    return (-half_b - sqrt(delta) ) / a;
-  }
-}
-
-colour3 ray_color(const ray& r) {
-  auto t = hit_sphere(point3(0,0,-1), 0.5, r);
-  if (t > 0.0) {
-    vec3 normal = glm::normalize(r.at(t) - vec3(0,0,-1));   // normal = (P-C)/R
-    return 0.5*colour3(normal.x+1, normal.y+1, normal.z+1); // normal is in the range [-1, 1]
+colour3 ray_color(const Ray& r) {
+  auto sphere = Sphere(point3(0,0,-1), 0.5);
+  Hit_record rec;
+  if (sphere.hit(r, 0.0, 5, rec)) {
+    // normal is in the range [-1, 1] so we need to map it to [0, 1]
+    return 0.5*colour3(rec.normal.x+1, rec.normal.y+1, rec.normal.z+1);
   }
 
   vec3 unit_direction = glm::normalize(r.direction());
@@ -88,7 +70,7 @@ int main() {
     for (int i = 0; i < image_width; ++i) {
       auto pixel_center = pixel00_loc + (static_cast<double>(i) * pixel_delta_u) + (static_cast<double>(j) * pixel_delta_v);
       auto ray_direction = pixel_center - camera_center;
-      ray r(camera_center, ray_direction);
+      Ray r(camera_center, ray_direction);
       pixels[j].push_back(ray_color(r));
     }
   }

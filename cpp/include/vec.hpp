@@ -5,9 +5,9 @@
 
 namespace raytracer {
 
-using vec3 = glm::dvec3;
-using point3 = glm::dvec3;
-using colour3 = glm::dvec3;
+using Vec = glm::dvec3;
+using Point = glm::dvec3;
+using Colour = glm::dvec3;
 
 } // namespace raytracer
 

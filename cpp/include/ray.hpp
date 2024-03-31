@@ -8,18 +8,18 @@ namespace raytracer {
 class Ray {
   public:
     Ray() {}
-    Ray(const point3& origin, const vec3& direction) : orig(origin), dir(direction) {}
+    Ray(const Point& origin, const Vec& direction) : orig(origin), dir(direction) {}
 
-    point3 origin() const { return orig; }
-    vec3 direction() const { return dir; }
+    Point origin() const { return orig; }
+    Vec direction() const { return dir; }
 
-    point3 at(double t) const {
+    Point at(double t) const {
       return orig + t*dir;
     }
 
   private:
-    point3 orig; // origin
-    vec3 dir;    // direction
+    Point orig; // origin
+    Vec dir;    // direction
 };
 
 } // namespace raytracer

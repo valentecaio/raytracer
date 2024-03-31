@@ -1,13 +1,11 @@
 #ifndef HITTABLE_LIST_H
 #define HITTABLE_LIST_H
 
-#include <memory> // shared_ptr, make_shared
-#include <vector>
-
+#include "common.hpp"
 #include "hittable.hpp"
 
 using std::shared_ptr;
-// using std::make_shared;
+using std::make_shared;
 
 namespace raytracer {
 

@@ -1,14 +1,9 @@
 // main.cpp
 
-#include <iostream>
-#include <vector>
-#include <glm/glm.hpp>
-
 #include "common.hpp"
 #include "sphere.hpp"
 #include "image.hpp"
 #include "ray.hpp"
-#include "vec.hpp"
 #include "hittable.hpp"
 #include "hittable_list.hpp"
 

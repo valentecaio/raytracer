@@ -1,10 +1,14 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <cmath>     // sqrt
-#include <limits>    // infinity
-#include <memory>    // shared_ptr, make_shared
-#include <algorithm> // max, min
+// includes
+#include <iostream>    // std::cout, std::clog, std::flush
+#include <memory>      // shared_ptr, make_shared
+#include <vector>
+#include <cmath>       // sqrt
+#include <limits>      // infinity
+#include <algorithm>   // max, min
+#include <glm/glm.hpp> // glm::dvec3, glm::dot, glm::normalize
 
 // usings
 using std::shared_ptr;
@@ -12,6 +16,11 @@ using std::make_shared;
 using std::sqrt;
 using std::min;
 using std::max;
+
+// class aliases
+using Vec = glm::dvec3;
+using Point = glm::dvec3;
+using Colour = glm::dvec3;
 
 // constants
 const double infinity = std::numeric_limits<double>::infinity();

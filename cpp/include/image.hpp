@@ -1,10 +1,7 @@
 #ifndef IMAGE_HPP
 #define IMAGE_HPP
 
-#include <iostream>
-#include <vector>
-
-#include "vec.hpp"
+#include "common.hpp"
 
 namespace raytracer {
 

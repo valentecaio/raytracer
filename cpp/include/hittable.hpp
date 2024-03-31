@@ -1,8 +1,8 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
+#include "common.hpp"
 #include "ray.hpp"
-#include "vec.hpp"
 
 namespace raytracer {
 

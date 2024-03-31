@@ -1,8 +1,8 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
+#include "common.hpp"
 #include "hittable.hpp"
-#include "vec.hpp"
 
 namespace raytracer {
 

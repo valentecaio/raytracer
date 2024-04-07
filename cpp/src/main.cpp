@@ -1,9 +1,10 @@
 // main.cpp
 
+#include "ray.hpp"
+#include "image.hpp"
 #include "common.hpp"
 #include "sphere.hpp"
-#include "image.hpp"
-#include "ray.hpp"
+#include "interval.hpp"
 #include "hittable.hpp"
 #include "hittable_list.hpp"
 
@@ -11,14 +12,14 @@ using namespace raytracer;
 
 Colour ray_color(const Ray& r, const Hittable& world) {
   Hit_record rec;
-  if (world.hit(r, 0, infinity, rec)) {
+  if (world.hit(r, Interval(0, infinity), rec)) {
     return 0.5*(rec.normal + Colour(1, 1, 1));
   }
 
   Vec unit_direction = glm::normalize(r.direction());
   // normal is in the range [-1, 1] so we need to map it to [0, 1]
   auto a = 0.5*(unit_direction.y + 1.0);
-  return (1.0 - a)*Colour(1, 1, 1) + a*Colour(0.5, 0.7, 1); // linear interpolation
+  return (1-a)*Colour(1, 1, 1) + a*Colour(0.5, 0.7, 1); // linear interpolation
 }
 
 int main() {

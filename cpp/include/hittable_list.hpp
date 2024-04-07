@@ -3,9 +3,7 @@
 
 #include "common.hpp"
 #include "hittable.hpp"
-
-using std::shared_ptr;
-using std::make_shared;
+#include "interval.hpp"
 
 namespace raytracer {
 
@@ -22,13 +20,13 @@ class Hittable_list : public Hittable {
       objects.push_back(object);
     }
 
-    bool hit(const Ray& r, double ray_tmin, double ray_tmax, Hit_record& rec) const override {
+    bool hit(const Ray& r, Interval ray_t, Hit_record& rec) const override {
       Hit_record temp_rec;
       bool hit_anything = false;
-      auto closest_so_far = ray_tmax;
+      auto closest_so_far = ray_t.max;
 
       for (const auto& object : objects) {
-        if (object->hit(r, ray_tmin, closest_so_far, temp_rec)) {
+        if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_rec)) {
           hit_anything = true;
           closest_so_far = temp_rec.t;
           rec = temp_rec;

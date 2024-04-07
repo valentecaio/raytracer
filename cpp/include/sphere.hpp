@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "hittable.hpp"
+#include "interval.hpp"
 
 namespace raytracer {
 
@@ -10,9 +11,9 @@ class Sphere : public Hittable {
   public:
     Sphere(Point _center, double _radius) : center(_center), radius(_radius) {}
 
-    bool hit(const Ray& ray, double ray_tmin, double ray_tmax, Hit_record& rec) const override {
+    bool hit(const Ray& ray, Interval ray_t, Hit_record& rec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
-      Vec oc = ray.origin() - center;                     // oc = A-C
+      Vec oc = ray.origin() - center;                      // oc = A-C
       auto a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
       auto half_b = glm::dot(oc, ray.direction());         // b = 2*dot(oc, B)
       auto oc_length_squared = glm::dot(oc, oc);
@@ -27,16 +28,16 @@ class Sphere : public Hittable {
 
       // find the nearest root that lies in the acceptable range.
       auto root = (-half_b - sqrtd) / a;
-      if (root <= ray_tmin || ray_tmax <= root) {
+      if (!ray_t.contains(root)) {
         root = (-half_b + sqrtd) / a; // try the other root
-        if (root <= ray_tmin || ray_tmax <= root)
+        if (!ray_t.contains(root))
           return false; // both roots are outside the acceptable range
       }
 
       // we have a hit! fill in the hit record
       rec.t = root;
       rec.p = ray.at(rec.t);                       // the hit point
-      Vec outward_normal = (rec.p-center)/radius; // normalized outward normal
+      Vec outward_normal = (rec.p-center)/radius;  // normalized outward normal
       rec.set_face_normal(ray, outward_normal);    // store the face orientation
       return true;
     }

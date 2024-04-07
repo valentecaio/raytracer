@@ -10,8 +10,9 @@ namespace raytracer {
 
 class Camera {
   public:
-    double aspect_ratio = 1.0; // ratio width/height
-    int image_width = 100;     // image width in pixel count
+    double aspect_ratio = 1.0;  // ratio width/height
+    int image_width = 100;      // image width in pixel count
+    int samples_per_pixel = 10; // random samples for each pixel
 
     // render the image row by row, from top to bottom
     void render(const Hittable& world) {
@@ -20,10 +21,12 @@ class Camera {
       for (int j = 0; j < image_height; ++j) {
         pixels.push_back(std::vector<Colour>());
         for (int i = 0; i < image_width; ++i) {
-          auto pixel_center = pixel00_loc + (static_cast<double>(i) * pixel_delta_u) + (static_cast<double>(j) * pixel_delta_v);
-          auto ray_direction = pixel_center - center;
-          Ray r(center, ray_direction);
-          pixels[j].push_back(ray_color(r, world));
+          auto pixel_color = Colour(0, 0, 0);
+          for (int sample = 0; sample < samples_per_pixel; ++sample) {
+            Ray r = get_ray(i, j);
+            pixel_color += ray_color(r, world);
+          }
+          pixels[j].push_back(pixel_color/static_cast<double>(samples_per_pixel));
         }
       }
       write_image(image_width, image_height, pixels);
@@ -87,6 +90,7 @@ class Camera {
       pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     }
 
+    // returns the colour of the ray after it hits the world
     Colour ray_color(const Ray& r, const Hittable& world) const {
       Hit_record rec;
       if (world.hit(r, Interval(0, infinity), rec)) {
@@ -98,6 +102,27 @@ class Camera {
       auto a = 0.5*(unit_direction.y + 1.0);
       return (1-a)*Colour(1, 1, 1) + a*Colour(0.5, 0.7, 1); // linear interpolation
     }
+
+    // get a randomly sampled camera ray for the pixel at location i,j
+    Ray get_ray(int i, int j) const {
+      auto pixel_center = pixel00_loc
+                        + (static_cast<double>(i) * pixel_delta_u)
+                        + (static_cast<double>(j) * pixel_delta_v);
+      auto pixel_sample = pixel_center + pixel_sample_square();
+
+      auto ray_origin = center;
+      auto ray_direction = pixel_sample - ray_origin;
+
+      return Ray(ray_origin, ray_direction);
+    }
+
+    // returns a random point in the square surrounding a pixel at the origin
+    Vec pixel_sample_square() const {
+      auto px = -0.5 + random_double();
+      auto py = -0.5 + random_double();
+      return (px * pixel_delta_u) + (py * pixel_delta_v);
+    }
+
 };
 
 } // namespace raytracer

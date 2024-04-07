@@ -5,10 +5,10 @@
 
 namespace raytracer {
 
-void write_pixel(std::ostream &out, Colour pixel_color) {
-  out << static_cast<int>(255.999 * pixel_color.r) << ' '
-      << static_cast<int>(255.999 * pixel_color.g) << ' '
-      << static_cast<int>(255.999 * pixel_color.b) << '\n';
+void write_pixel(std::ostream &out, Colour pixel_colour) {
+  out << static_cast<int>(255.999 * pixel_colour.r) << ' '
+      << static_cast<int>(255.999 * pixel_colour.g) << ' '
+      << static_cast<int>(255.999 * pixel_colour.b) << '\n';
 }
 
 void write_image(int image_width, int image_height, std::vector<std::vector<Colour>>& pixels) {

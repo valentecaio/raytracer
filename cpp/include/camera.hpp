@@ -5,6 +5,7 @@
 #include "hittable_list.hpp"
 #include "sphere.hpp"
 #include "image.hpp"
+#include "utils.hpp"
 
 namespace raytracer {
 
@@ -13,6 +14,7 @@ class Camera {
     double aspect_ratio = 1.0;  // ratio width/height
     int image_width = 100;      // image width in pixel count
     int samples_per_pixel = 10; // random samples for each pixel
+    int max_depth = 10;         // maximum number of ray bounces into scene
 
     // render the image row by row, from top to bottom
     void render(const Hittable& world) {
@@ -24,7 +26,7 @@ class Camera {
           auto pixel_color = Colour(0, 0, 0);
           for (int sample = 0; sample < samples_per_pixel; ++sample) {
             Ray r = get_ray(i, j);
-            pixel_color += ray_color(r, world);
+            pixel_color += ray_colour(r, world, max_depth);
           }
           pixels[j].push_back(pixel_color/static_cast<double>(samples_per_pixel));
         }
@@ -91,10 +93,18 @@ class Camera {
     }
 
     // returns the colour of the ray after it hits the world
-    Colour ray_color(const Ray& r, const Hittable& world) const {
+    Colour ray_colour(const Ray& r, const Hittable& world, int depth) const {
+      // if we've exceeded the ray bounce limit, no more light is gathered
+      if (depth <= 0)
+        return Colour(1, 0, 0);
+
       Hit_record rec;
-      if (world.hit(r, Interval(0, infinity), rec)) {
-        return 0.5*(rec.normal + Colour(1, 1, 1));
+      // simple diffuse material:
+      // if a ray hits an object, it bounces off in a random direction
+      // starts interval at 0.0001 to avoid self-intersection
+      if (world.hit(r, Interval(0.0001, infinity), rec)) {
+        Vec rand_direction = random_vec_on_hemisphere(rec.normal);
+        return 0.5 * ray_colour(Ray(rec.p, rand_direction), world, depth-1);
       }
 
       Vec unit_direction = glm::normalize(r.direction());

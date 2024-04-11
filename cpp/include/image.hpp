@@ -5,10 +5,15 @@
 
 namespace raytracer {
 
+// convert linear RGB to gamma corrected RGB
+inline double linear_to_gamma(double linear_component) {
+  return (linear_component > 0) ? sqrt(linear_component) : 0;
+}
+
 void write_pixel(std::ostream &out, Colour pixel_colour) {
-  out << static_cast<int>(255.999 * pixel_colour.r) << ' '
-      << static_cast<int>(255.999 * pixel_colour.g) << ' '
-      << static_cast<int>(255.999 * pixel_colour.b) << '\n';
+  out << static_cast<int>(255.999 * linear_to_gamma(pixel_colour.r)) << ' '
+      << static_cast<int>(255.999 * linear_to_gamma(pixel_colour.g)) << ' '
+      << static_cast<int>(255.999 * linear_to_gamma(pixel_colour.b)) << '\n';
 }
 
 void write_image(int image_width, int image_height, std::vector<std::vector<Colour>>& pixels) {

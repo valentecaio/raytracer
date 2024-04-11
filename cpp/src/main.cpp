@@ -1,8 +1,8 @@
 // main.cpp
 
-#include "common.hpp"
 #include "hittable_list.hpp"
 #include "camera.hpp"
+#include "common.hpp"
 
 using namespace raytracer;
 

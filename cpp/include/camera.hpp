@@ -47,16 +47,8 @@ class Camera {
     void initialize() {
       if (initialized) return;
 
-      /* IMAGE */
-
       // the image has a locked aspect ratio, but the height has to be at least 1
       image_height = max(static_cast<int>(image_width / aspect_ratio), 1);
-
-      /* WORLD */
-
-      Hittable_list world;
-      world.add(make_shared<Sphere>(Point(0,0,-1), 0.5));      // a sphere in the center
-      world.add(make_shared<Sphere>(Point(0,-100.5,-1), 100)); // ground sphere
 
       /* CAMERA */
 
@@ -102,13 +94,14 @@ class Camera {
       // simple diffuse material:
       // if a ray hits an object, it bounces off in a random direction
       // starts interval at 0.0001 to avoid self-intersection
+      // 0.5 because half of the light is absorbed
       if (world.hit(r, Interval(0.0001, infinity), rec)) {
         Vec rand_direction = random_vec_on_hemisphere(rec.normal);
         return 0.5 * ray_colour(Ray(rec.p, rand_direction), world, depth-1);
       }
 
       Vec unit_direction = glm::normalize(r.direction());
-      // normal is in the range [-1, 1] so we need to map it to [0, 1]
+      // unit_direction is in the range [-1, 1] so we need to map it to [0, 1]
       auto a = 0.5*(unit_direction.y + 1.0);
       return (1-a)*Colour(1, 1, 1) + a*Colour(0.5, 0.7, 1); // linear interpolation
     }

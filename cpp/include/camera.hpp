@@ -6,6 +6,7 @@
 #include "sphere.hpp"
 #include "image.hpp"
 #include "utils.hpp"
+#include "material.hpp"
 
 namespace raytracer {
 

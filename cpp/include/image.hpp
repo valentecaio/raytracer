@@ -1,5 +1,5 @@
-#ifndef IMAGE_HPP
-#define IMAGE_HPP
+#ifndef IMAGE_H
+#define IMAGE_H
 
 #include "common.hpp"
 
@@ -28,4 +28,4 @@ void write_image(int image_width, int image_height, std::vector<std::vector<Colo
 
 } // namespace raytracer
 
-#endif // IMAGE_HPP
+#endif // IMAGE_H

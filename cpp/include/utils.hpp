@@ -46,6 +46,17 @@ inline Vec random_vec_on_hemisphere(const Vec& normal) {
   return (glm::dot(vec, normal) > 0.0) ? vec : -vec;
 }
 
+// true if the vector is close to zero in all dimensions.
+inline bool vec_is_near_zero(const Vec& v) {
+  auto s = 1e-8;
+  return (fabs(v.x) < s) && (fabs(v.y) < s) && (fabs(v.z) < s);
+}
+
+// returns the reflection of a vector v around a normal n.
+inline Vec vec_reflect(const Vec& v, const Vec& n) {
+  return v - 2*glm::dot(v,n)*n;
+}
+
 // print a Vec
 inline void print_vec(const Vec& v) {
   std::clog << "{" << v.x << ", " << v.y << ", " << v.z << "}" << std::endl;

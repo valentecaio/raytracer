@@ -9,7 +9,9 @@ namespace raytracer {
 
 class Sphere : public Hittable {
   public:
-    Sphere(Point _center, double _radius) : center(_center), radius(_radius) {}
+    Sphere(Point _center, double _radius) : center(_center), radius(max(0.0, _radius)) {
+      // TODO: Initialize the material pointer `mat`.
+    }
 
     bool hit(const Ray& ray, Interval ray_t, Hit_record& rec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
@@ -36,7 +38,8 @@ class Sphere : public Hittable {
 
       // we have a hit! fill in the hit record
       rec.t = root;
-      rec.p = ray.at(rec.t);                       // the hit point
+      rec.p = ray.at(rec.t);
+      rec.material = material;
       Vec outward_normal = (rec.p-center)/radius;  // normalized outward normal
       rec.set_face_normal(ray, outward_normal);    // store the face orientation
       return true;
@@ -45,6 +48,7 @@ class Sphere : public Hittable {
   private:
     Point center;
     double radius;
+    shared_ptr<Material> material;
 };
 
 } // namespace raytracer

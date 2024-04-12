@@ -1,12 +1,12 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-// includes
+/* INCLUDES */
 #include <iostream>    // std::cout, std::clog, std::flush
 #include <memory>      // shared_ptr, make_shared
 #include <vector>
 #include <cstdlib>     // rand
-#include <cmath>       // sqrt
+#include <cmath>       // sqrt, fabs
 #include <limits>      // infinity
 #include <algorithm>   // max, min
 #include <glm/glm.hpp> // glm::dvec3, glm::dot, glm::normalize
@@ -20,6 +20,7 @@ using std::make_shared;
 using std::sqrt;
 using std::min;
 using std::max;
+using std::fabs;
 
 
 /* CLASS ALIASES */

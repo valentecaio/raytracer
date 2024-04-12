@@ -7,12 +7,18 @@
 
 namespace raytracer {
 
+// this is a forward declaration of the material class
+// to avoid circular dependencies between the hittable and material classes
+class Material;
+
+// The Hit_record class stores information about a ray-object intersection.
 class Hit_record {
   public:
-    Point p;
-    Vec normal;
-    double t;
-    bool front_face;
+    Point p;                       // hit point
+    Vec normal;                    // normal vector at the hit point
+    shared_ptr<Material> material; // material of the object that was hit
+    double t;                      // ray parametrized distance at hit point
+    bool front_face;               // true if the ray hit the front face of the object
 
     // Sets the hit record normal vector and face orientation
     // NOTE: the parameter `outward_normal` is assumed to be normalized
@@ -22,6 +28,7 @@ class Hit_record {
     }
 };
 
+// The Hittable class is an abstract class that represents any object that can be hit by a ray.
 class Hittable {
   public:
     virtual ~Hittable() = default;

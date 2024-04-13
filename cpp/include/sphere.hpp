@@ -4,14 +4,14 @@
 #include "common.hpp"
 #include "hittable.hpp"
 #include "interval.hpp"
+#include "material.hpp"
 
 namespace raytracer {
 
 class Sphere : public Hittable {
   public:
-    Sphere(Point _center, double _radius) : center(_center), radius(max(0.0, _radius)) {
-      // TODO: Initialize the material pointer `mat`.
-    }
+    Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
+      : center(_center), radius(max(0.0, _radius)), material(_material) {}
 
     bool hit(const Ray& ray, Interval ray_t, Hit_record& rec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a

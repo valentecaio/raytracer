@@ -89,16 +89,16 @@ class Camera {
     Colour ray_colour(const Ray& r, const Hittable& world, int depth) const {
       // if we've exceeded the ray bounce limit, no more light is gathered
       if (depth <= 0)
-        return Colour(1, 0, 0);
+        return Colour(0, 0, 0);
 
       Hit_record rec;
-      // simple diffuse material:
-      // if a ray hits an object, it bounces off in a random direction
       // starts interval at 0.0001 to avoid self-intersection
-      // 0.5 because half of the light is absorbed
       if (world.hit(r, Interval(0.0001, infinity), rec)) {
-        Vec rand_direction = random_vec_on_hemisphere(rec.normal);
-        return 0.5 * ray_colour(Ray(rec.p, rand_direction), world, depth-1);
+        Ray scattered;
+        Colour attenuation;
+        if (rec.material->scatter(r, rec, attenuation, scattered))
+          return attenuation * ray_colour(scattered, world, depth-1);
+        return Colour(0, 0, 0);
       }
 
       Vec unit_direction = glm::normalize(r.direction());

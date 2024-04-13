@@ -50,10 +50,10 @@ class Metal : public Material {
     Metal(const Colour& albedo) : albedo(albedo) {}
 
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
-        Vec reflected = vec_reflect(r_in.direction(), rec.normal);
-        scattered = Ray(rec.p, reflected);
-        attenuation = albedo;
-        return true;
+      Vec reflected = vec_reflect(r_in.direction(), rec.normal);
+      scattered = Ray(rec.p, reflected);
+      attenuation = albedo;
+      return true;
     }
 
   private:

@@ -30,7 +30,7 @@ class Lambertian : public Material {
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
       auto scatter_direction = rec.normal + random_unit_vector();
 
-      // Catch degenerate scatter direction
+      // catch degenerate scatter direction
       if (vec_is_near_zero(scatter_direction))
         scatter_direction = rec.normal;
 
@@ -40,24 +40,26 @@ class Lambertian : public Material {
     }
 
   private:
-    Colour albedo;
+    Colour albedo; // colour of the material
 };
 
 
 // A Metal material that reflects rays
 class Metal : public Material {
   public:
-    Metal(const Colour& albedo) : albedo(albedo) {}
+    Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(min(_fuzz, 1.0)) {}
 
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
-      Vec reflected = vec_reflect(r_in.direction(), rec.normal);
+      auto reflected = vec_reflect(r_in.direction(), rec.normal);
+      reflected = glm::normalize(reflected) + (fuzz*random_unit_vector());
       scattered = Ray(rec.p, reflected);
       attenuation = albedo;
-      return true;
+      return glm::dot(scattered.direction(), rec.normal) > 0; // absorb rays that scatter below the surface
     }
 
   private:
-    Colour albedo;
+    Colour albedo; // colour of the material
+    double fuzz;   // zero for a shiny surface, one for a completely random reflection
 };
 
 } // namespace raytracer

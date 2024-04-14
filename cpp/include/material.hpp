@@ -25,7 +25,7 @@ class Material {
 // A Diffuse material that scatters rays in random directions
 class Lambertian : public Material {
   public:
-    Lambertian(const Colour& albedo) : albedo(albedo) {}
+    Lambertian(const Colour& _albedo) : albedo(_albedo) {}
 
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
       auto scatter_direction = rec.normal + random_unit_vector();
@@ -66,7 +66,7 @@ class Metal : public Material {
 // A Dielectric material that refracts rays
 class Dielectric : public Material {
   public:
-    Dielectric(double refraction_index) : refraction_index(refraction_index) {}
+    Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
 
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
       attenuation = Colour(1.0, 1.0, 1.0);

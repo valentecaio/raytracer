@@ -66,7 +66,7 @@ inline Vec vec_refract(const Vec& uv, const Vec& n, double etai_over_etat) {
 }
 
 // print a Vec
-inline void print_vec(const Vec& v) {
+inline void vec_print(const Vec& v) {
   std::clog << "{" << v.x << ", " << v.y << ", " << v.z << "}" << std::endl;
 }
 

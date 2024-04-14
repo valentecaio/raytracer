@@ -72,8 +72,8 @@ class Dielectric : public Material {
       attenuation = Colour(1.0, 1.0, 1.0);
       double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
 
-      Vec unit_direction = glm::normalize(r_in.direction());
-      Vec refracted = vec_refract(unit_direction, rec.normal, ri);
+      // direction must be normalized
+      Vec refracted = vec_refract(r_in.direction(), rec.normal, ri);
 
       scattered = Ray(rec.p, refracted);
       return true;

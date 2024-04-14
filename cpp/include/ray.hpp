@@ -8,7 +8,7 @@ namespace raytracer {
 class Ray {
   public:
     Ray() {}
-    Ray(const Point& origin, const Vec& direction) : orig(origin), dir(direction) {}
+    Ray(const Point& origin, const Vec& direction) : orig(origin), dir(glm::normalize(direction)) {}
 
     Point origin() const { return orig; }
     Vec direction() const { return dir; }
@@ -19,7 +19,7 @@ class Ray {
 
   private:
     Point orig; // origin
-    Vec dir;    // direction
+    Vec dir;    // direction, normalized
 };
 
 } // namespace raytracer

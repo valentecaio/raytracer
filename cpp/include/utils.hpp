@@ -57,6 +57,14 @@ inline Vec vec_reflect(const Vec& v, const Vec& n) {
   return v - 2*glm::dot(v,n)*n;
 }
 
+// returns the refraction of a vector uv through a normal n.
+inline Vec vec_refract(const Vec& uv, const Vec& n, double etai_over_etat) {
+  auto cos_theta = min(dot(-uv, n), 1.0);
+  Vec r_out_perp =  etai_over_etat * (uv + cos_theta*n);
+  Vec r_out_parallel = -sqrt(fabs(1.0 - glm::length(r_out_perp))) * n;
+  return r_out_perp + r_out_parallel;
+}
+
 // print a Vec
 inline void print_vec(const Vec& v) {
   std::clog << "{" << v.x << ", " << v.y << ", " << v.z << "}" << std::endl;

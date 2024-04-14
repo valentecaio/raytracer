@@ -62,6 +62,29 @@ class Metal : public Material {
     double fuzz;   // zero for a shiny surface, one for a completely random reflection
 };
 
+
+// A Dielectric material that refracts rays
+class Dielectric : public Material {
+  public:
+    Dielectric(double refraction_index) : refraction_index(refraction_index) {}
+
+    bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
+      attenuation = Colour(1.0, 1.0, 1.0);
+      double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
+
+      Vec unit_direction = glm::normalize(r_in.direction());
+      Vec refracted = vec_refract(unit_direction, rec.normal, ri);
+
+      scattered = Ray(rec.p, refracted);
+      return true;
+    }
+
+  private:
+    // Refractive index in vacuum or air, or ratio of the material's refractive index over
+    // the refractive index of the enclosing media
+    double refraction_index;
+};
+
 } // namespace raytracer
 
 #endif // MATERIAL_H

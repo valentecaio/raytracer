@@ -28,6 +28,7 @@ class Hit_record {
     }
 };
 
+
 // The Hittable class is an abstract class that represents any object that can be hit by a ray.
 class Hittable {
   public:

@@ -63,25 +63,34 @@ class Metal : public Material {
 };
 
 
-// A Dielectric material that refracts rays
+// A Dielectric material that always refracts rays
 class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
 
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
-      attenuation = Colour(1.0, 1.0, 1.0);
+      attenuation = Colour(1, 1, 1);
       double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
 
-      // direction must be normalized
-      Vec refracted = vec_refract(r_in.direction(), rec.normal, ri);
+      double cos_theta = min(glm::dot(-r_in.direction(), rec.normal), 1.0);
+      double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 
-      scattered = Ray(rec.p, refracted);
+      Vec direction;
+      if (ri * sin_theta > 1.0) {
+        // must reflect
+        direction = vec_reflect(r_in.direction(), rec.normal);
+      } else {
+        // can refract, and r_in.direction must be normalized
+        direction = vec_refract(r_in.direction(), rec.normal, ri);
+      }
+
+      scattered = Ray(rec.p, direction);
       return true;
     }
 
   private:
-    // Refractive index in vacuum or air, or ratio of the material's refractive index over
-    // the refractive index of the enclosing media
+    // Refractive index in vacuum or air,
+    // or ratio of the material's refractive index over the refractive index of the enclosing media
     double refraction_index;
 };
 

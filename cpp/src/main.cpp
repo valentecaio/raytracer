@@ -14,7 +14,7 @@ int main() {
   auto material_ground = make_shared<Lambertian>(Colour(0.8, 0.8, 0.0));
   auto material_center = make_shared<Lambertian>(Colour(0.1, 0.2, 0.5));
   //auto material_left =  make_shared<Metal>(Colour(1.0, 0.2, 0.2), 0.0);
-  auto material_left =  make_shared<Dielectric>(1.7);
+  auto material_left =  make_shared<Dielectric>(1.5);
   auto material_right = make_shared<Metal>(Colour(0.2, 0.8, 0.2), 0.2);
 
   world.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));

@@ -87,9 +87,10 @@ class Camera {
 
     // returns the colour of the ray after it hits the world
     Colour ray_colour(const Ray& r, const Hittable& world, int depth) const {
+      auto def_colour = Colour(1, 0, 0);
       // if we've exceeded the ray bounce limit, no more light is gathered
       if (depth <= 0)
-        return Colour(0, 0, 0);
+        return def_colour;
 
       Hit_record rec;
       // starts interval at 0.0001 to avoid self-intersection
@@ -98,13 +99,16 @@ class Camera {
         Colour attenuation;
         if (rec.material->scatter(r, rec, attenuation, scattered))
           return attenuation * ray_colour(scattered, world, depth-1);
-        return Colour(0, 0, 0);
+        return def_colour;
       }
 
-      Vec unit_direction = glm::normalize(r.direction());
+      // background colour
+      auto base_colour = Colour(0.5, 0.7, 1);
       // unit_direction is in the range [-1, 1] so we need to map it to [0, 1]
+      Vec unit_direction = glm::normalize(r.direction());
       auto a = 0.5*(unit_direction.y + 1.0);
-      return (1-a)*Colour(1, 1, 1) + a*Colour(0.5, 0.7, 1); // linear interpolation
+      // linear interpolation
+      return a*base_colour + (1-a)*Colour(1, 1, 1);
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j

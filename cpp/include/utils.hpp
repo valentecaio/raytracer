@@ -53,6 +53,7 @@ inline bool vec_is_near_zero(const Vec& v) {
 }
 
 // returns the reflection of a vector v around a normal n.
+// v and n must be normalized
 inline Vec vec_reflect(const Vec& v, const Vec& n) {
   return v - 2*glm::dot(v,n)*n;
 }
@@ -61,7 +62,8 @@ inline Vec vec_reflect(const Vec& v, const Vec& n) {
 inline Vec vec_refract(const Vec& uv, const Vec& n, double etai_over_etat) {
   auto cos_theta = min(dot(-uv, n), 1.0);
   Vec r_out_perp =  etai_over_etat * (uv + cos_theta*n);
-  Vec r_out_parallel = -sqrt(fabs(1.0 - glm::length(r_out_perp))) * n;
+  auto length = glm::length(r_out_perp);
+  Vec r_out_parallel = -sqrt(fabs(1.0 - length*length)) * n;
   return r_out_perp + r_out_parallel;
 }
 

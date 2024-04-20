@@ -75,14 +75,13 @@ class Dielectric : public Material {
       double cos_theta = min(glm::dot(-r_in.direction(), rec.normal), 1.0);
       double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 
+      bool can_refract = ri * sin_theta <= 1.0;
+
       Vec direction;
-      if (ri * sin_theta > 1.0) {
-        // must reflect
+      if (can_refract)
         direction = vec_reflect(r_in.direction(), rec.normal);
-      } else {
-        // can refract, and r_in.direction must be normalized
+      else
         direction = vec_refract(r_in.direction(), rec.normal, ri);
-      }
 
       scattered = Ray(rec.p, direction);
       return true;

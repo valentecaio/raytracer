@@ -16,6 +16,7 @@ class Camera {
     int image_width = 100;      // image width in pixel count
     int samples_per_pixel = 10; // random samples for each pixel
     int max_depth = 10;         // maximum number of ray bounces into scene
+    double vfov = 90.0;         // vertical field of view in degrees
 
     // render the image row by row, from top to bottom
     void render(const Hittable& world) {
@@ -59,13 +60,12 @@ class Camera {
       center = Point(0, 0, 0);
 
       // the focal length is the distance between the camera and the viewport.
-      // we will start with a focal length of 1.0
-      auto focal_length = 1.0;
-
       // the viewport is a virtual window that we use to render the image
       // it is a grid of pixels, with the same aspect ratio as the image
-      // we need to calculate the actual aspect ratio in double precision here
-      auto viewport_height = 2.0;
+      auto focal_length = 1.0;
+      auto theta = glm::radians(vfov);
+      auto h = glm::tan(theta/2.0);
+      auto viewport_height = 2.0 * h;
       auto viewport_width = viewport_height * (static_cast<double>(image_width)/image_height);
 
       // the vectors vu and vv define the viewport in the world coordinates

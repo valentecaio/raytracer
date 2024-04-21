@@ -32,5 +32,6 @@ int main() {
   camera.image_width = 1600;
   camera.samples_per_pixel = 5;
   camera.max_depth = 5;
+  camera.vfov = 90.0;
   camera.render(world);
 }

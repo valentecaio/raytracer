@@ -12,11 +12,18 @@ namespace raytracer {
 
 class Camera {
   public:
-    double aspect_ratio = 1.0;  // ratio width/height
-    int image_width = 100;      // image width in pixel count
-    int samples_per_pixel = 10; // random samples for each pixel
-    int max_depth = 10;         // maximum number of ray bounces into scene
-    double vfov = 90.0;         // vertical field of view in degrees
+    double aspect_ratio = 1.0;      // ratio width/height
+    int image_width = 100;          // image width in pixel count
+    int samples_per_pixel = 10;     // random samples for each pixel
+    int max_depth = 10;             // maximum number of ray bounces into scene
+
+    double vfov = 90.0;             // vertical field of view in degrees
+    Point look_from = Point(0,0,0); // camera location
+    Point look_at = Point(0,1,0);   // camera target
+    Vec vup;                        // camera up vector (view up)
+
+    double defocus_angle = 0.0;     // angle of the cone with apex at the viewpoint and base at the camera center (0 = no defocus)
+    double focus_dist = 10;         // distance from camera to focus plane
 
     // render the image row by row, from top to bottom
     void render(const Hittable& world) {
@@ -43,7 +50,10 @@ class Camera {
     Point pixel00_loc;        // location of pixel {0, 0}
     Vec pixel_delta_u;        // offset to pixel to the right
     Vec pixel_delta_v;        // offset to pixel below
+    Vec u, v, w;              // camera coordinate system
+    Vec defocus_u, defocus_v; // defocus vectors, u is horizontal, v is vertical
     bool initialized = false; // flag to check if the camera has been initialized
+
     std::vector<std::vector<Colour>> pixels; // image pixel data
 
     void initialize() {
@@ -57,21 +67,24 @@ class Camera {
       // the camera is at the origin of the world, looking towards the negative z-axis.
       // we will use right-handed coordinates, so the x-axis points to the right,
       // the y-axis points up, and the z-axis points towards the viewer
-      center = Point(0, 0, 0);
+      center = look_from;
 
-      // the focal length is the distance between the camera and the viewport.
       // the viewport is a virtual window that we use to render the image
       // it is a grid of pixels, with the same aspect ratio as the image
-      auto focal_length = 1.0;
       auto theta = glm::radians(vfov);
       auto h = glm::tan(theta/2.0);
-      auto viewport_height = 2.0 * h;
+      auto viewport_height = 2.0 * h * focus_dist;
       auto viewport_width = viewport_height * (static_cast<double>(image_width)/image_height);
+
+      // the camera coordinate system is defined by the look_from, look_at, and vup vectors
+      w = glm::normalize(look_from - look_at); // camera forward direction
+      u = glm::normalize(glm::cross(vup, w));  // camera right direction
+      v = glm::cross(w, u);                    // camera up direction
 
       // the vectors vu and vv define the viewport in the world coordinates
       // the viewport is centered at the camera, and the camera is looking towards the negative z-axis
-      auto viewport_u = Vec(viewport_width, 0, 0);
-      auto viewport_v = Vec(0, -viewport_height, 0);
+      auto viewport_u = u * viewport_width;
+      auto viewport_v = -v * viewport_height;
 
       // these are the deltas for the pixel coordinates in the viewport
       pixel_delta_u = viewport_u / static_cast<double>(image_width);
@@ -81,8 +94,13 @@ class Camera {
       // the top left corner of the image has coordinates (0, 0), and the bottom right
       // corner has coordinates (image_width, image_height).
       // we must calculate the location of the upper left pixel in the viewport coordinates
-      auto viewport_upper_left = center - Vec(0, 0, focal_length) - viewport_u/2.0 - viewport_v/2.0;
+      auto viewport_upper_left = center - (focus_dist * w) - viewport_u/2.0 - viewport_v/2.0;
       pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+      // camera defocus disk factors
+      auto defocus_radius = focus_dist * glm::tan(glm::radians(defocus_angle)/2.0);
+      defocus_u = u * defocus_radius;
+      defocus_v = v * defocus_radius;
     }
 
     // returns the colour of the ray after it hits the world
@@ -118,7 +136,7 @@ class Camera {
                         + (static_cast<double>(j) * pixel_delta_v);
       auto pixel_sample = pixel_center + pixel_sample_square();
 
-      auto ray_origin = center;
+      auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
       auto ray_direction = pixel_sample - ray_origin;
 
       return Ray(ray_origin, ray_direction);
@@ -129,6 +147,12 @@ class Camera {
       auto px = -0.5 + random_double();
       auto py = -0.5 + random_double();
       return (px * pixel_delta_u) + (py * pixel_delta_v);
+    }
+
+    // returns a random point in the camera defocus disk.
+    Point defocus_disk_sample() const {
+      auto p = vec::random_in_unit_disk();
+      return center + (p.x * defocus_u) + (p.y * defocus_v);
     }
 
 };

@@ -14,13 +14,7 @@ class Interval {
 
     bool contains(double x) const  { return min <= x && x <= max; }
     bool surrounds(double x) const { return min < x && x < max; }
-
-    double clamp(double x) const {
-      // return std::min(std::max(x, min), max);
-      if (x < min) return min;
-      if (x > max) return max;
-      return x;
-    }
+    double clamp(double x) const { return std::min(std::max(x, min), max); }
 
     static const Interval empty, universe;
 };

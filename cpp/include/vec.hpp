@@ -36,6 +36,15 @@ namespace vec {
     return (glm::dot(vec, normal) > 0.0) ? vec : -vec;
   }
 
+  // returns a random Vec in the unit disk (z=0)
+  inline Vec random_in_unit_disk() {
+    while (true) {
+      auto p = Vec(random_double(-1, 1), random_double(-1, 1), 0);
+      if (glm::length(p) < 1)
+        return p;
+    }
+  }
+
   // true if the vector is close to zero in all dimensions.
   inline bool is_near_zero(const Vec& v) {
     auto s = 1e-8;

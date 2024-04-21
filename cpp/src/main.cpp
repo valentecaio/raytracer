@@ -22,16 +22,24 @@ int main() {
   world.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, material_center));
   world.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, material_left));
   world.add(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_right));
-  world.add(make_shared<Sphere>(Point( 0.3,  -0.15, -0.7), 0.2, material_small));
-  world.add(make_shared<Sphere>(Point( 0.3,  -0.15, -0.7), 0.15, material_bubble));
+  world.add(make_shared<Sphere>(Point( 0.3,   -0.1, -0.7), 0.2, material_small));
+  // world.add(make_shared<Sphere>(Point( 0.3,  -0.15, -0.7), 0.15, material_bubble));
 
   /* CAMERA */
 
   Camera camera;
   camera.aspect_ratio = 16.0 / 9.0;
   camera.image_width = 1600;
-  camera.samples_per_pixel = 5;
+  camera.samples_per_pixel = 50;
   camera.max_depth = 5;
+
   camera.vfov = 90.0;
+  camera.look_from = Point(0,0,0);
+  camera.look_at = Point(0,0,-1);
+  camera.vup = Vec(0,1,0);
+
+  camera.defocus_angle = 0;
+  camera.focus_dist    = 1;
+
   camera.render(world);
 }

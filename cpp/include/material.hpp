@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "ray.hpp"
 #include "utils.hpp"
+#include "vec.hpp"
 
 namespace raytracer {
 
@@ -28,10 +29,10 @@ class Lambertian : public Material {
     Lambertian(const Colour& _albedo) : albedo(_albedo) {}
 
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
-      auto scatter_direction = rec.normal + random_unit_vector();
+      auto scatter_direction = rec.normal + vec::random_unit();
 
       // catch degenerate scatter direction
-      if (vec_is_near_zero(scatter_direction))
+      if (vec::is_near_zero(scatter_direction))
         scatter_direction = rec.normal;
 
       scattered = Ray(rec.p, scatter_direction);
@@ -50,8 +51,8 @@ class Metal : public Material {
     Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(min(_fuzz, 1.0)) {}
 
     bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
-      auto reflected = vec_reflect(r_in.direction(), rec.normal);
-      reflected = glm::normalize(reflected) + (fuzz*random_unit_vector());
+      auto reflected = glm::reflect(r_in.direction(), rec.normal);
+      reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
       scattered = Ray(rec.p, reflected);
       attenuation = albedo;
       return glm::dot(scattered.direction(), rec.normal) > 0; // absorb rays that scatter below the surface
@@ -79,9 +80,9 @@ class Dielectric : public Material {
 
       Vec direction;
       if (can_refract)
-        direction = vec_reflect(r_in.direction(), rec.normal);
+        direction = glm::refract(r_in.direction(), rec.normal, ri);
       else
-        direction = vec_refract(r_in.direction(), rec.normal, ri);
+        direction = glm::reflect(r_in.direction(), rec.normal);
 
       scattered = Ray(rec.p, direction);
       return true;

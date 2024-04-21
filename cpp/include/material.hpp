@@ -64,7 +64,7 @@ class Metal : public Material {
 };
 
 
-// A Dielectric material that always refracts rays
+// A Dielectric material that always refracts rays (glass)
 class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
@@ -79,10 +79,10 @@ class Dielectric : public Material {
       bool can_refract = ri * sin_theta <= 1.0;
 
       Vec direction;
-      if (can_refract)
-        direction = glm::refract(r_in.direction(), rec.normal, ri);
-      else
+      if (!can_refract || reflectance(cos_theta, ri) > random_double())
         direction = glm::reflect(r_in.direction(), rec.normal);
+      else
+        direction = glm::refract(r_in.direction(), rec.normal, ri);
 
       scattered = Ray(rec.p, direction);
       return true;
@@ -92,6 +92,13 @@ class Dielectric : public Material {
     // Refractive index in vacuum or air,
     // or ratio of the material's refractive index over the refractive index of the enclosing media
     double refraction_index;
+
+    // Schlick's approximation for reflectance
+    double reflectance(double cosine, double refraction_idx) const {
+      auto r0 = (1-refraction_idx) / (1+refraction_idx);
+      r0 = r0*r0;
+      return r0 + (1-r0)*pow((1 - cosine), 5);
+    }
 };
 
 } // namespace raytracer

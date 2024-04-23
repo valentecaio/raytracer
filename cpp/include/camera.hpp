@@ -25,19 +25,30 @@ class Camera {
     double defocus_angle = 0.0;     // angle of the cone with apex at the viewpoint and base at the camera center (0 = no defocus)
     double focus_dist = 10;         // distance from camera to focus plane
 
+    Camera() = default;
+    Camera(Hittable_list world) : world(world) {}
+
     // render the image row by row, from top to bottom
-    void render(const Hittable& world) {
+    void render() {
       initialize();
 
       for (int j = 0; j < image_height; ++j) {
-        pixels.push_back(std::vector<Colour>());
         for (int i = 0; i < image_width; ++i) {
-          auto pixel_color = Colour(0, 0, 0);
+          auto pixel_colour = Colour(0, 0, 0);
+          int nsamples = 0;
           for (int sample = 0; sample < samples_per_pixel; ++sample) {
             Ray r = get_ray(i, j);
-            pixel_color += ray_colour(r, world, max_depth);
+            Colour c;
+            if (ray_colour(r, c, max_depth)) {
+              nsamples++;
+              pixel_colour += c;
+            }
           }
-          pixels[j].push_back(pixel_color/static_cast<double>(samples_per_pixel));
+          if (nsamples > 0) {
+            pixels[j][i] = pixel_colour/static_cast<double>(nsamples);
+          } else {
+            pixels[j][i] = Colour(1, 0, 0);
+          }
         }
       }
       write_image(image_width, image_height, pixels);
@@ -53,6 +64,7 @@ class Camera {
     Vec u, v, w;              // camera coordinate system
     Vec defocus_u, defocus_v; // defocus vectors, u is horizontal, v is vertical
     bool initialized = false; // flag to check if the camera has been initialized
+    Hittable_list world;      // world to render
 
     std::vector<std::vector<Colour>> pixels; // image pixel data
 
@@ -101,23 +113,33 @@ class Camera {
       auto defocus_radius = focus_dist * glm::tan(glm::radians(defocus_angle)/2.0);
       defocus_u = u * defocus_radius;
       defocus_v = v * defocus_radius;
+
+      // pre-allocate memory for the image
+      pixels.resize(image_height);
+      for (int j = 0; j < image_height; ++j)
+        pixels[j].resize(image_width);
     }
 
     // returns the colour of the ray after it hits the world
-    Colour ray_colour(const Ray& r, const Hittable& world, int depth) const {
-      auto def_colour = Colour(1, 0, 0);
+    bool ray_colour(const Ray& r, Colour& ret_colour, int depth) const {
       // if we've exceeded the ray bounce limit, no more light is gathered
       if (depth <= 0)
-        return def_colour;
+        return false;
 
       Hit_record rec;
       // starts interval at 0.0001 to avoid self-intersection
       if (world.hit(r, Interval(0.0001, infinity), rec)) {
         Ray scattered;
         Colour attenuation;
-        if (rec.material->scatter(r, rec, attenuation, scattered))
-          return attenuation * ray_colour(scattered, world, depth-1);
-        return def_colour;
+        if (!rec.material->scatter(r, rec, attenuation, scattered))
+          return false;
+
+        Colour c;
+        if (!ray_colour(scattered, c, depth-1))
+          return false;
+
+        ret_colour = attenuation * c;
+        return true;
       }
 
       // background colour
@@ -126,7 +148,8 @@ class Camera {
       Vec unit_direction = glm::normalize(r.direction());
       auto a = 0.5*(unit_direction.y + 1.0);
       // linear interpolation
-      return a*base_colour + (1-a)*Colour(1, 1, 1);
+      ret_colour = a*base_colour + (1-a)*Colour(1, 1, 1);
+      return true;
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j

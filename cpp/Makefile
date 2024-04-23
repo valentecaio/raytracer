@@ -4,7 +4,7 @@
 SRCDIR := src
 BUILD := build
 CC = g++
-CFLAGS = -Wall -std=c++11 -I include/ -I lib/ -I lib/glm-1.0.1/
+CFLAGS = -Wall -std=c++11 -fopenmp -fopenacc -I include/ -I lib/ -I lib/glm-1.0.1/
 
 # Main executable and output image filepaths
 EXE = $(BUILD)/raytracer

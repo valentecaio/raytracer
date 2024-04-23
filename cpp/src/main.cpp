@@ -1,5 +1,7 @@
 // main.cpp
 
+#include <chrono>
+
 #include "hittable_list.hpp"
 #include "camera.hpp"
 #include "common.hpp"
@@ -27,11 +29,11 @@ int main() {
 
   /* CAMERA */
 
-  Camera camera;
+  Camera camera(world);
   camera.aspect_ratio = 16.0 / 9.0;
-  camera.image_width = 1600;
-  camera.samples_per_pixel = 50;
-  camera.max_depth = 5;
+  camera.image_width = 800;
+  camera.samples_per_pixel = 15;
+  camera.max_depth = 15;
 
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
@@ -39,7 +41,12 @@ int main() {
   camera.vup = Vec(0,1,0);
 
   camera.defocus_angle = 0;
-  camera.focus_dist    = 1;
+  camera.focus_dist = 1;
 
-  camera.render(world);
+  /* RENDER */
+
+  auto start = std::chrono::high_resolution_clock::now();
+  camera.render();
+  auto end = std::chrono::high_resolution_clock::now();
+  std::clog << "\nRender time: " << std::chrono::duration<double>(end-start).count() << " seconds" << std::endl;
 }

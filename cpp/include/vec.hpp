@@ -32,29 +32,16 @@ namespace vec {
     return glm::normalize(Vec(x, y, z));
   }
 
-  inline Vec random_unit_old() {
-    while (true) {
-      auto p = random(-1, 1);
-      if (glm::length(p) < 1)
-        // if the point is inside the unit sphere, return it normalized
-        // so that it lies on the surface of the unit sphere
-        return glm::normalize(p);
-    }
-  }
-
   // returns a unit vector in the hemisphere of the normal.
-  inline Vec random_on_hemisphere(const Vec& normal) {
+  inline Vec random_unit_hemisphere(const Vec& normal) {
     Vec vec = random_unit();
     return (glm::dot(vec, normal) > 0.0) ? vec : -vec;
   }
 
-  // returns a random Vec in the unit disk (z=0)
+  // returns a random Vec inside the unit disk (z=0)
   inline Vec random_in_unit_disk() {
-    while (true) {
-      auto p = Vec(random_double(-1, 1), random_double(-1, 1), 0);
-      if (glm::length(p) < 1)
-        return p;
-    }
+    auto phi = 2*M_PI*random_double();
+    return Vec(cos(phi), sin(phi), 0);
   }
 
   // true if the vector is close to zero in all dimensions.

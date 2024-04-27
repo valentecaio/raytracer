@@ -12,14 +12,24 @@ class Hit_record;
 
 class Material {
   public:
+    // constructors and destructors
+    Material() = default;
     virtual ~Material() = default;
 
-    virtual bool scatter(const Ray& r_in,
-                         const Hit_record& rec,
-                         Colour& attenuation,
-                         Ray& scattered) const {
+    // returns true if the ray is scattered, false otherwise
+    // attenuation is the colour absorbed by the material
+    // scattered is the new ray after scattering
+    // rec is the hit record
+    virtual bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const {
       return false;
     }
+
+    // returns the emission colour of the material
+    Colour emit() const { return emission_colour; }
+
+  protected:
+    // non-light materials have no emission, so it defaults to black
+    Colour emission_colour = Colour(0, 0, 0);
 };
 
 
@@ -100,6 +110,18 @@ class Dielectric : public Material {
       return r0 + (1-r0)*pow((1 - cosine), 5);
     }
 };
+
+
+// A light material that emits light
+class Light : public Material {
+  public:
+    Light(const Colour& _emission) { emission_colour = _emission; }
+
+    bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
+      return false;
+    }
+};
+
 
 } // namespace raytracer
 

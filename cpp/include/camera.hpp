@@ -25,6 +25,10 @@ class Camera {
     double defocus_angle = 0.0;     // angle of the cone with apex at the viewpoint and base at the camera center (0 = no defocus)
     double focus_dist = 10;         // distance from camera to focus plane
 
+    Colour background_colour;       // scene background colour
+
+
+    // constructors and destructors
     Camera() = default;
     Camera(Hittable_list world) : world(world) {}
 
@@ -45,20 +49,11 @@ class Camera {
       for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {
           auto pixel_colour = Colour(0, 0, 0);
-          int nsamples = 0;
           for (int sample = 0; sample < samples_per_pixel; ++sample) {
             Ray r = get_ray(i, j);
-            Colour c;
-            if (ray_colour(r, c, max_depth)) {
-              nsamples++;
-              pixel_colour += c;
-            }
+            pixel_colour += ray_colour(r, max_depth);
           }
-          if (nsamples > 0) {
-            pixels[j][i] = pixel_colour/static_cast<double>(nsamples);
-          } else {
-            pixels[j][i] = Colour(1, 0, 0);
-          }
+          pixels[j][i] = pixel_colour/static_cast<double>(samples_per_pixel);
         }
       }
       write_image(image_width, image_height, pixels);
@@ -131,35 +126,24 @@ class Camera {
     }
 
     // returns the colour of the ray after it hits the world
-    bool ray_colour(const Ray& r, Colour& ret_colour, int depth) const {
+    Colour ray_colour(const Ray& r, int depth) const {
       // if we've exceeded the ray bounce limit, no more light is gathered
       if (depth <= 0)
-        return false;
+        return background_colour;
 
       Hit_record rec;
       // starts interval at 0.0001 to avoid self-intersection
       if (world.hit(r, Interval(0.0001, infinity), rec)) {
         Ray scattered;
         Colour attenuation;
-        if (!rec.material->scatter(r, rec, attenuation, scattered))
-          return false;
-
-        Colour c;
-        if (!ray_colour(scattered, c, depth-1))
-          return false;
-
-        ret_colour = attenuation * c;
-        return true;
+        if (rec.material->scatter(r, rec, attenuation, scattered)) {
+          return attenuation * ray_colour(scattered, depth-1);
+        } else {
+          return rec.material->emit();
+        }
+      } else {
+        return background_colour;
       }
-
-      // background colour
-      auto base_colour = Colour(0.5, 0.7, 1);
-      // unit_direction is in the range [-1, 1] so we need to map it to [0, 1]
-      Vec unit_direction = glm::normalize(r.direction());
-      auto a = 0.5*(unit_direction.y + 1.0);
-      // linear interpolation
-      ret_colour = a*base_colour + (1-a)*Colour(1, 1, 1);
-      return true;
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j

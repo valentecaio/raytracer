@@ -32,7 +32,7 @@ int main() {
   Camera camera(world);
   camera.aspect_ratio = 16.0 / 9.0;
   camera.image_width = 800;
-  camera.samples_per_pixel = 15;
+  camera.samples_per_pixel = 30;
   camera.max_depth = 15;
 
   camera.vfov = 90.0;

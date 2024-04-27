@@ -41,7 +41,7 @@ class Camera {
 
       // #pragma acc data copy(pixels, image_height, image_width, samples_per_pixel, max_depth)
       // #pragma acc parallel loop
-      #pragma omp parallel for schedule(static)
+      // #pragma omp parallel for schedule(static)
       for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {
           auto pixel_colour = Colour(0, 0, 0);

@@ -19,8 +19,20 @@ namespace vec {
     return Vec(random_double(min, max), random_double(min, max), random_double(min, max));
   }
 
-  // returns a random unit vector (i.e. a point on the unit sphere).
+  // returns a random unit vector (a point on the surface of the unit sphere).
   inline Vec random_unit() {
+    auto z = 1 - 2*random_double();
+
+    auto r = sqrt(1 - z*z);
+    auto phi = 2*M_PI*random_double();
+
+    auto x = r*cos(phi);
+    auto y = r*sin(phi);
+
+    return glm::normalize(Vec(x, y, z));
+  }
+
+  inline Vec random_unit_old() {
     while (true) {
       auto p = random(-1, 1);
       if (glm::length(p) < 1)

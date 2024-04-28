@@ -9,7 +9,7 @@
 #include <cmath>       // sqrt, fabs
 #include <limits>      // infinity
 #include <algorithm>   // max, min
-#include <glm/glm.hpp> // glm::dvec3, glm::dot, glm::normalize
+#include <glm.hpp>     // glm::dvec3, glm::dot, glm::normalize
 
 namespace raytracer {
 

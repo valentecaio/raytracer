@@ -25,18 +25,19 @@ class Sphere : public Hittable {
       // if delta is negative, there are no real roots
       // if delta is zero, there is one real root
       // if delta is positive, there are two real roots and we return the smallest one
-      if (delta < 0) return false;
-      auto sqrtd = sqrt(delta);
+      if (delta < 0)
+        return false;
 
       // find the nearest root that lies in the acceptable range.
-      auto root = (-half_b - sqrtd) / a;
+      auto sqrtd = sqrt(delta);
+      auto root = (-half_b - sqrtd) / a; // try nearest root
       if (!ray_t.contains(root)) {
-        root = (-half_b + sqrtd) / a; // try the other root
+        root = (-half_b + sqrtd) / a;    // try second root
         if (!ray_t.contains(root))
           return false; // both roots are outside the acceptable range
       }
 
-      // we have a hit! fill in the hit record
+      // HIT !
       rec.t = root;
       rec.p = ray.at(rec.t);
       rec.material = material;

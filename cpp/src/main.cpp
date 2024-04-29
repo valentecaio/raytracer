@@ -2,9 +2,12 @@
 
 #include <chrono>
 
+#include "common.hpp"
 #include "hittable_list.hpp"
 #include "camera.hpp"
-#include "common.hpp"
+#include "material.hpp"
+#include "sphere.hpp"
+#include "quad.hpp"
 
 using namespace raytracer;
 
@@ -14,25 +17,27 @@ void cornell_box() {
   auto red   = make_shared<Lambertian>(Colour(.65, .05, .05));
   auto white = make_shared<Lambertian>(Colour(.73, .73, .73));
   auto green = make_shared<Lambertian>(Colour(.12, .45, .15));
-  auto light = make_shared<Light>(Colour(15, 15, 15));
+  auto light = make_shared<Light>(Colour(1, 1, 1));
 
-  // world.add(make_shared<Quad>(Point(555,0,0), Vec(0,555,0), Vec(0,0,555), green));
-  // world.add(make_shared<Quad>(Point(0,0,0), Vec(0,555,0), Vec(0,0,555), red));
-  // world.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), light));
-  // world.add(make_shared<Quad>(Point(0,0,0), Vec(555,0,0), Vec(0,0,555), white));
-  // world.add(make_shared<Quad>(Point(555,555,555), Vec(-555,0,0), Vec(0,0,-555), white));
-  // world.add(make_shared<Quad>(Point(0,0,555), Vec(555,0,0), Vec(0,555,0), white));
+  world.add(make_shared<Quad>(Point(555,0,0), Vec(0,555,0), Vec(0,0,555), green));
+  world.add(make_shared<Quad>(Point(0,0,0), Vec(0,555,0), Vec(0,0,555), red));
+  world.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), light));
+  world.add(make_shared<Quad>(Point(0,0,0), Vec(555,0,0), Vec(0,0,555), white));
+  world.add(make_shared<Quad>(Point(555,555,555), Vec(-555,0,0), Vec(0,0,-555), white));
+  world.add(make_shared<Quad>(Point(0,0,555), Vec(555,0,0), Vec(0,555,0), white));
+
+  // world.add(make_shared<Sphere>(Point(190, 90, 190), 90, light));
 
   Camera camera(world);
 
   camera.aspect_ratio = 1.0;
   camera.image_width = 600;
-  camera.samples_per_pixel = 200;
-  camera.max_depth = 50;
-  camera.background_colour = Colour(0,0,0);
+  camera.samples_per_pixel = 20;
+  camera.max_depth = 20;
+  camera.background_colour = Colour(0.05, 0.05, 0.05);
 
   camera.vfov = 40;
-  camera.look_from = Point(278, 278, -800);
+  camera.look_from = Point(278, 278, -900);
   camera.look_at = Point(278, 278, 0);
   camera.vup = Vec(0,1,0);
 
@@ -91,7 +96,7 @@ void scene1() {
 }
 
 int main() {
-  switch (1) {
+  switch (0) {
     case 0: cornell_box(); break;
     case 1: scene1(); break;
   }

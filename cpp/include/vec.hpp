@@ -21,13 +21,13 @@ inline Vec random(double min, double max) {
 
 // returns a random unit vector (a point on the surface of the unit sphere).
 inline Vec random_unit() {
-  auto z = 1 - 2*random_double();
+  double z = 1 - 2*random_double();    // z = random in [-1,1]
 
-  auto r = sqrt(1 - z*z);
-  auto phi = 2*M_PI*random_double();
+  double r = sqrt(1 - z*z);
+  double phi = 2*M_PI*random_double(); // phi = random in [0, 2pi)
 
-  auto x = r*cos(phi);
-  auto y = r*sin(phi);
+  double x = r*cos(phi);
+  double y = r*sin(phi);
 
   return glm::normalize(Vec(x, y, z));
 }
@@ -40,7 +40,7 @@ inline Vec random_unit_hemisphere(const Vec& normal) {
 
 // returns a random Vec inside the unit disk (z=0)
 inline Vec random_in_unit_disk() {
-  auto phi = 2*M_PI*random_double();
+  double phi = 2*M_PI*random_double(); // phi = random in [0, 2pi)
   return Vec(cos(phi), sin(phi), 0);
 }
 
@@ -61,7 +61,7 @@ inline Vec reflect(const Vec& v, const Vec& n) {
 
 // returns the refraction of a vector uv through a normal n.
 inline Vec refract(const Vec& uv, const Vec& n, double etai_over_etat) {
-  auto cos_theta = min(dot(-uv, n), 1.0);
+  double cos_theta = min(dot(-uv, n), 1.0);
   Vec r_out_perp =  etai_over_etat * (uv + cos_theta*n);
   Vec r_out_parallel = -sqrt(fabs(1.0 - squared_length(r_out_perp))) * n;
   return r_out_perp + r_out_parallel;

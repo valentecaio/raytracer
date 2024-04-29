@@ -37,7 +37,7 @@ class Lambertian : public Material {
     Lambertian(const Colour& _albedo) : albedo(_albedo) {}
 
     bool bounce(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& bounced) const override {
-      auto bounce_direction = rec.normal + vec::random_unit();
+      Vec bounce_direction = rec.normal + vec::random_unit();
 
       // catch degenerate direction
       if (vec::is_near_zero(bounce_direction))
@@ -59,7 +59,7 @@ class Metal : public Material {
     Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(min(_fuzz, 1.0)) {}
 
     bool bounce(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& bounced) const override {
-      auto reflected = glm::reflect(r_in.direction(), rec.normal);
+      Vec reflected = glm::reflect(r_in.direction(), rec.normal);
       reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
       bounced = Ray(rec.p, reflected);
       attenuation = albedo;
@@ -103,7 +103,7 @@ class Dielectric : public Material {
 
     // Schlick's approximation for reflectance
     double reflectance(double cosine, double refraction_idx) const {
-      auto r0 = (1-refraction_idx) / (1+refraction_idx);
+      double r0 = (1-refraction_idx) / (1+refraction_idx);
       r0 = r0*r0;
       return r0 + (1-r0)*pow((1 - cosine), 5);
     }

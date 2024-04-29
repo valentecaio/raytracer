@@ -16,11 +16,11 @@ class Sphere : public Hittable {
     bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
       Vec oc = ray.origin() - center;                      // oc = A-C
-      auto a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
-      auto half_b = glm::dot(oc, ray.direction());         // b = 2*dot(oc, B)
-      auto oc_length_squared = glm::dot(oc, oc);
-      auto c = oc_length_squared - radius*radius;          // c = dot(oc, oc) - R*R
-      auto delta = half_b*half_b - a*c;                    // delta = b*b - 4*a*c
+      double a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
+      double half_b = glm::dot(oc, ray.direction());         // b = 2*dot(oc, B)
+      double oc_length_squared = glm::dot(oc, oc);
+      double c = oc_length_squared - radius*radius;          // c = dot(oc, oc) - R*R
+      double delta = half_b*half_b - a*c;                    // delta = b*b - 4*a*c
 
       // if delta is negative, there are no real roots
       // if delta is zero, there is one real root
@@ -29,8 +29,8 @@ class Sphere : public Hittable {
         return false;
 
       // find the nearest root that lies in the acceptable range.
-      auto sqrtd = sqrt(delta);
-      auto root = (-half_b - sqrtd) / a; // try nearest root
+      double sqrtd = sqrt(delta);
+      double root = (-half_b - sqrtd) / a; // try nearest root
       if (!ray_t.contains(root)) {
         root = (-half_b + sqrtd) / a;    // try second root
         if (!ray_t.contains(root))

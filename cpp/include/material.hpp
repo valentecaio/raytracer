@@ -24,12 +24,10 @@ class Material {
       return false;
     }
 
-    // returns the emission colour of the material
-    Colour emit() const { return emission_colour; }
-
-  protected:
-    // non-light materials have no emission, so it defaults to black
-    Colour emission_colour = Colour(0, 0, 0);
+    // returns true if the material can emit light, false otherwise
+    virtual bool emit(Colour& emitted) const {
+      return false;
+    }
 };
 
 
@@ -120,6 +118,14 @@ class Light : public Material {
     bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
       return false;
     }
+
+    bool emit(Colour& emitted) const override {
+      emitted = emission_colour;
+      return true;
+    }
+
+  private:
+    Colour emission_colour;
 };
 
 

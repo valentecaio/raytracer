@@ -20,7 +20,7 @@ class Camera {
     double vfov = 90.0;             // vertical field of view in degrees
     Point look_from = Point(0,0,0); // camera location
     Point look_at = Point(0,1,0);   // camera target
-    Vec vup;                        // camera up vector (view up)
+    Vec vup = Vec(0, 1, 0);         // camera up vector (view up)
 
     double defocus_angle = 0.0;     // angle of the cone with apex at the viewpoint and base at the camera center (0 = no defocus)
     double focus_dist = 10;         // distance from camera to focus plane
@@ -36,16 +36,18 @@ class Camera {
     void render() {
       initialize();
 
-      // necessary for data sharing in OpenACC
-      auto pixels = std::vector<std::vector<Colour>>(image_height, std::vector<Colour>(image_width));
-      auto image_width = this->image_width;
-      auto image_height = this->image_height;
-      auto samples_per_pixel = this->samples_per_pixel;
-      auto max_depth = this->max_depth;
-
+      // OpenACC for GPU parallelization
+      // auto pixels = std::vector<std::vector<Colour>>(image_height, std::vector<Colour>(image_width));
+      // auto image_width = this->image_width;
+      // auto image_height = this->image_height;
+      // auto samples_per_pixel = this->samples_per_pixel;
+      // auto max_depth = this->max_depth;
       // #pragma acc data copy(pixels, image_height, image_width, samples_per_pixel, max_depth)
       // #pragma acc parallel loop
+
+      // OpenMP for CPU parallelization
       // #pragma omp parallel for schedule(static)
+
       for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {
           auto pixel_colour = Colour(0, 0, 0);
@@ -131,19 +133,25 @@ class Camera {
       if (depth <= 0)
         return background_colour;
 
+      // try to hit an object in the world, starting at 0.0001 to avoid self-intersection
+      // misses are considered as background colour
       HitRecord rec;
-      // starts interval at 0.0001 to avoid self-intersection
-      if (world.hit(r, Interval(0.0001, infinity), rec)) {
-        Ray scattered;
-        Colour attenuation;
-        if (rec.material->scatter(r, rec, attenuation, scattered)) {
-          return attenuation * ray_colour(scattered, depth-1);
-        } else {
-          return rec.material->emit();
-        }
-      } else {
+      if (!world.hit(r, Interval(0.0001, infinity), rec))
         return background_colour;
-      }
+
+      // HIT ! Check if material emits light
+      Colour emitted;
+      if (rec.material->emit(emitted))
+        return emitted;
+
+      // try to (recursively) bounce ray at the hit point, if the material allows it
+      Ray new_ray;
+      Colour attenuation;
+      if (rec.material->scatter(r, rec, attenuation, new_ray))
+        return attenuation * ray_colour(new_ray, depth-1);
+
+      // the material absorbed the ray, so the pixel is background_colour coloured
+      return background_colour;
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j

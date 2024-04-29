@@ -33,7 +33,7 @@ class Quad : public Hittable {
       double denom = glm::dot(normal, r.direction());
 
       // ray and plane are parallels -> no intersection
-      if (fabs(denom) < 1e-8)
+      if (fabs(denom) < NEAR_ZERO)
         return false;
 
       // calculate the intersection point, t = (d - n*o) / n*d

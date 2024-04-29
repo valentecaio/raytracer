@@ -124,7 +124,7 @@ void spheres() {
 }
 
 int main() {
-  switch (2) {
+  switch (1) {
     case 0: cornell_box(); break;
     case 1: spheres(); break;
     case 2: quads(); break;

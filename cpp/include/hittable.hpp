@@ -33,7 +33,6 @@ class HitRecord {
 class Hittable {
   public:
     virtual ~Hittable() = default;
-
     virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const = 0;
 };
 

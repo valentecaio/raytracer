@@ -46,8 +46,7 @@ inline Vec random_in_unit_disk() {
 
 // true if the vector is close to zero in all dimensions.
 inline bool is_near_zero(const Vec& v) {
-  auto s = 1e-8;
-  return (fabs(v.x) < s) && (fabs(v.y) < s) && (fabs(v.z) < s);
+  return (fabs(v.x) < NEAR_ZERO) && (fabs(v.y) < NEAR_ZERO) && (fabs(v.z) < NEAR_ZERO);
 }
 
 inline double squared_length(const Vec& v) {

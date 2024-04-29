@@ -142,15 +142,16 @@ class Camera {
       // HIT ! Check if material emits light
       Colour emitted;
       if (rec.material->emit(emitted))
-        return emitted;
+        // rays that travelled far into the scene are less visible
+        return emitted * (static_cast<double>(depth)/max_depth);
 
-      // try to (recursively) bounce ray at the hit point, if the material allows it
+      // (recursively) bounce ray at the hit point, if the material allows it
       Ray new_ray;
       Colour attenuation;
-      if (rec.material->scatter(r, rec, attenuation, new_ray))
+      if (rec.material->bounce(r, rec, attenuation, new_ray))
         return attenuation * ray_colour(new_ray, depth-1);
 
-      // the material absorbed the ray, so the pixel is background_colour coloured
+      // did not emit nor bounce -> the material absorbed the ray
       return background_colour;
     }
 

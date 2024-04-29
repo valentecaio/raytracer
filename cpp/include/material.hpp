@@ -16,11 +16,11 @@ class Material {
     Material() = default;
     virtual ~Material() = default;
 
-    // returns true if the ray is scattered, false otherwise
+    // returns true if the ray is bounced, false otherwise
     // attenuation is the colour absorbed by the material
-    // scattered is the new ray after scattering
+    // bounced is the new ray after bouncing
     // rec is the hit record
-    virtual bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const {
+    virtual bool bounce(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& bounced) const {
       return false;
     }
 
@@ -31,19 +31,19 @@ class Material {
 };
 
 
-// A Diffuse material that scatters rays in random directions
+// A Diffuse material that bounces rays in random directions
 class Lambertian : public Material {
   public:
     Lambertian(const Colour& _albedo) : albedo(_albedo) {}
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
-      auto scatter_direction = rec.normal + vec::random_unit();
+    bool bounce(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& bounced) const override {
+      auto bounce_direction = rec.normal + vec::random_unit();
 
-      // catch degenerate scatter direction
-      if (vec::is_near_zero(scatter_direction))
-        scatter_direction = rec.normal;
+      // catch degenerate direction
+      if (vec::is_near_zero(bounce_direction))
+        bounce_direction = rec.normal;
 
-      scattered = Ray(rec.p, scatter_direction);
+      bounced = Ray(rec.p, bounce_direction);
       attenuation = albedo;
       return true;
     }
@@ -58,12 +58,12 @@ class Metal : public Material {
   public:
     Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(min(_fuzz, 1.0)) {}
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
+    bool bounce(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& bounced) const override {
       auto reflected = glm::reflect(r_in.direction(), rec.normal);
       reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
-      scattered = Ray(rec.p, reflected);
+      bounced = Ray(rec.p, reflected);
       attenuation = albedo;
-      return glm::dot(scattered.direction(), rec.normal) > 0; // absorb rays that scatter below the surface
+      return glm::dot(bounced.direction(), rec.normal) > 0; // absorb rays that bounce below the surface
     }
 
   private:
@@ -77,7 +77,7 @@ class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
+    bool bounce(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& bounced) const override {
       attenuation = Colour(1, 1, 1);
       double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
 
@@ -92,7 +92,7 @@ class Dielectric : public Material {
       else
         direction = glm::refract(r_in.direction(), rec.normal, ri);
 
-      scattered = Ray(rec.p, direction);
+      bounced = Ray(rec.p, direction);
       return true;
     }
 
@@ -115,7 +115,7 @@ class Light : public Material {
   public:
     Light(const Colour& _emission) { emission_colour = _emission; }
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
+    bool bounce(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& bounced) const override {
       return false;
     }
 

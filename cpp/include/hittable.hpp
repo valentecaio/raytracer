@@ -11,8 +11,8 @@ namespace raytracer {
 // to avoid circular dependencies between the hittable and material classes
 class Material;
 
-// The Hit_record class stores information about a ray-object intersection.
-class Hit_record {
+// The HitRecord class stores information about a ray-object intersection.
+class HitRecord {
   public:
     Point p;                       // hit point
     Vec normal;                    // normal vector at the hit point
@@ -34,7 +34,7 @@ class Hittable {
   public:
     virtual ~Hittable() = default;
 
-    virtual bool hit(const Ray& r, Interval ray_t, Hit_record& rec) const = 0;
+    virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const = 0;
 };
 
 } // namespace raytracer

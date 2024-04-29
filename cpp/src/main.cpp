@@ -9,7 +9,7 @@
 using namespace raytracer;
 
 void cornell_box() {
-  Hittable_list world;
+  HittableList world;
 
   auto red   = make_shared<Lambertian>(Colour(.65, .05, .05));
   auto white = make_shared<Lambertian>(Colour(.73, .73, .73));
@@ -47,7 +47,7 @@ void cornell_box() {
 void scene1() {
   /* WORLD */
 
-  Hittable_list world;
+  HittableList world;
 
   auto material_ground = make_shared<Lambertian>(Colour(0.8, 0.8, 0.0));
   auto material_center = make_shared<Lambertian>(Colour(0.1, 0.2, 0.5));

@@ -30,7 +30,7 @@ class Camera {
 
     // constructors and destructors
     Camera() = default;
-    Camera(Hittable_list world) : world(world) {}
+    Camera(HittableList world) : world(world) {}
 
     // render the image row by row, from top to bottom
     void render() {
@@ -69,7 +69,7 @@ class Camera {
     Vec u, v, w;              // camera coordinate system
     Vec defocus_u, defocus_v; // defocus vectors, u is horizontal, v is vertical
     bool initialized = false; // flag to check if the camera has been initialized
-    Hittable_list world;      // world to render
+    HittableList world;       // world to render
 
     std::vector<std::vector<Colour>> pixels; // image pixel data
 
@@ -131,7 +131,7 @@ class Camera {
       if (depth <= 0)
         return background_colour;
 
-      Hit_record rec;
+      HitRecord rec;
       // starts interval at 0.0001 to avoid self-intersection
       if (world.hit(r, Interval(0.0001, infinity), rec)) {
         Ray scattered;

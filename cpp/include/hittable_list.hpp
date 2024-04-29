@@ -7,12 +7,12 @@
 
 namespace raytracer {
 
-class Hittable_list : public Hittable {
+class HittableList : public Hittable {
   public:
     std::vector<shared_ptr<Hittable>> objects;
 
-    Hittable_list() {}
-    Hittable_list(shared_ptr<Hittable> _object) { add(_object); }
+    HittableList() {}
+    HittableList(shared_ptr<Hittable> _object) { add(_object); }
 
     void clear() { objects.clear(); }
 
@@ -20,8 +20,8 @@ class Hittable_list : public Hittable {
       objects.push_back(object);
     }
 
-    bool hit(const Ray& r, Interval ray_t, Hit_record& rec) const override {
-      Hit_record temp_rec;
+    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
+      HitRecord temp_rec;
       bool hit_anything = false;
       auto closest_so_far = ray_t.max;
 

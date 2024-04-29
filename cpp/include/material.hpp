@@ -8,7 +8,7 @@
 
 namespace raytracer {
 
-class Hit_record;
+class HitRecord;
 
 class Material {
   public:
@@ -20,7 +20,7 @@ class Material {
     // attenuation is the colour absorbed by the material
     // scattered is the new ray after scattering
     // rec is the hit record
-    virtual bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const {
+    virtual bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const {
       return false;
     }
 
@@ -38,7 +38,7 @@ class Lambertian : public Material {
   public:
     Lambertian(const Colour& _albedo) : albedo(_albedo) {}
 
-    bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
+    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
       auto scatter_direction = rec.normal + vec::random_unit();
 
       // catch degenerate scatter direction
@@ -60,7 +60,7 @@ class Metal : public Material {
   public:
     Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(min(_fuzz, 1.0)) {}
 
-    bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
+    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
       auto reflected = glm::reflect(r_in.direction(), rec.normal);
       reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
       scattered = Ray(rec.p, reflected);
@@ -79,7 +79,7 @@ class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
 
-    bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
+    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
       attenuation = Colour(1, 1, 1);
       double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
 
@@ -117,7 +117,7 @@ class Light : public Material {
   public:
     Light(const Colour& _emission) { emission_colour = _emission; }
 
-    bool scatter(const Ray& r_in, const Hit_record& rec, Colour& attenuation, Ray& scattered) const override {
+    bool scatter(const Ray& r_in, const HitRecord& rec, Colour& attenuation, Ray& scattered) const override {
       return false;
     }
 };

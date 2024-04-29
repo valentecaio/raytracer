@@ -8,7 +8,43 @@
 
 using namespace raytracer;
 
-int main() {
+void cornell_box() {
+  Hittable_list world;
+
+  auto red   = make_shared<Lambertian>(Colour(.65, .05, .05));
+  auto white = make_shared<Lambertian>(Colour(.73, .73, .73));
+  auto green = make_shared<Lambertian>(Colour(.12, .45, .15));
+  auto light = make_shared<Light>(Colour(15, 15, 15));
+
+  // world.add(make_shared<Quad>(Point(555,0,0), Vec(0,555,0), Vec(0,0,555), green));
+  // world.add(make_shared<Quad>(Point(0,0,0), Vec(0,555,0), Vec(0,0,555), red));
+  // world.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), light));
+  // world.add(make_shared<Quad>(Point(0,0,0), Vec(555,0,0), Vec(0,0,555), white));
+  // world.add(make_shared<Quad>(Point(555,555,555), Vec(-555,0,0), Vec(0,0,-555), white));
+  // world.add(make_shared<Quad>(Point(0,0,555), Vec(555,0,0), Vec(0,555,0), white));
+
+  Camera camera(world);
+
+  camera.aspect_ratio = 1.0;
+  camera.image_width = 600;
+  camera.samples_per_pixel = 200;
+  camera.max_depth = 50;
+  camera.background_colour = Colour(0,0,0);
+
+  camera.vfov = 40;
+  camera.look_from = Point(278, 278, -800);
+  camera.look_at = Point(278, 278, 0);
+  camera.vup = Vec(0,1,0);
+
+  camera.defocus_angle = 0;
+
+  auto start = std::chrono::high_resolution_clock::now();
+  camera.render();
+  auto end = std::chrono::high_resolution_clock::now();
+  std::clog << "\nRender time: " << std::chrono::duration<double>(end-start).count() << " seconds" << std::endl;
+}
+
+void scene1() {
   /* WORLD */
 
   Hittable_list world;
@@ -36,6 +72,7 @@ int main() {
   camera.image_width = 800;
   camera.samples_per_pixel = 20;
   camera.max_depth = 15;
+  camera.background_colour = Colour(0.05, 0.05, 0.05);
 
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
@@ -45,12 +82,17 @@ int main() {
   camera.defocus_angle = 0;
   camera.focus_dist = 1;
 
-  camera.background_colour = Colour(0.05, 0.05, 0.05);
-
   /* RENDER */
 
   auto start = std::chrono::high_resolution_clock::now();
   camera.render();
   auto end = std::chrono::high_resolution_clock::now();
   std::clog << "\nRender time: " << std::chrono::duration<double>(end-start).count() << " seconds" << std::endl;
+}
+
+int main() {
+  switch (1) {
+    case 0: cornell_box(); break;
+    case 1: scene1(); break;
+  }
 }

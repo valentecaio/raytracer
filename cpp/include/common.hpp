@@ -11,8 +11,6 @@
 #include <algorithm>   // max, min
 #include <glm.hpp>     // glm::dvec3, glm::dot, glm::normalize
 
-namespace raytracer {
-
 
 /* USINGS */
 using std::shared_ptr;
@@ -23,6 +21,8 @@ using std::max;
 using std::fabs;
 
 
+namespace raytracer {
+
 /* CLASS ALIASES */
 using Vec = glm::dvec3;
 using Point = glm::dvec3;
@@ -32,7 +32,6 @@ using Colour = glm::dvec3;
 /* CONSTANTS */
 const double infinity = std::numeric_limits<double>::infinity();
 const double pi = 3.1415926535897932385;
-
 
 } // namespace raytracer
 

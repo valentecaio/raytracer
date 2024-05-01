@@ -15,6 +15,11 @@ inline double random_double(double min, double max) {
   return min + (max-min)*random_double();
 }
 
+// returns a random sample in the quad defined by the point p and the vectors u and v
+inline Point sample_quad(Point p, Vec u, Vec v) {
+  return p + random_double()*u + random_double()*v;
+}
+
 } // namespace raytracer
 
 #endif // UTILS_H

@@ -2,7 +2,7 @@
 #define CAMERA_H
 
 #include "common.hpp"
-#include "hittable_list.hpp"
+#include "scene.hpp"
 #include "sphere.hpp"
 #include "image.hpp"
 #include "utils.hpp"
@@ -16,7 +16,6 @@ class Camera {
     int image_width = 100;          // image width in pixel count
     int samples_per_pixel = 10;     // random samples for each pixel
     int max_depth = 10;             // maximum number of ray bounces into scene
-    Colour background_colour;       // scene background colour
 
     double vfov = 90.0;             // vertical field of view in degrees
     Point look_from = Point(0,0,0); // camera location
@@ -29,7 +28,7 @@ class Camera {
 
     // constructors and destructors
     Camera() = default;
-    Camera(HittableList world) : world(world) {}
+    Camera(Scene scene) : scene(scene) {}
 
     // render the image row by row, from top to bottom
     void render() {
@@ -52,7 +51,7 @@ class Camera {
           auto pixel_colour = Colour(0, 0, 0);
           for (int sample = 0; sample < samples_per_pixel; ++sample) {
             Ray r = get_ray(i, j);
-            pixel_colour += ray_colour(r, max_depth);
+            pixel_colour += trace_ray(r, max_depth);
           }
           pixels[j][i] = pixel_colour/static_cast<double>(samples_per_pixel);
         }
@@ -70,7 +69,7 @@ class Camera {
     Vec u, v, w;              // camera coordinate system
     Vec defocus_u, defocus_v; // defocus vectors, u is horizontal, v is vertical
     bool initialized = false; // flag to check if the camera has been initialized
-    HittableList world;       // world to render
+    Scene scene;              // scene to render
 
     std::vector<std::vector<Colour>> pixels; // image pixel data
 
@@ -82,7 +81,7 @@ class Camera {
 
       /* CAMERA */
 
-      // the camera is at the origin of the world, looking towards the negative z-axis.
+      // the camera is at the origin of the scene, looking towards the negative z-axis.
       // we will use right-handed coordinates, so the x-axis points to the right,
       // the y-axis points up, and the z-axis points towards the viewer
       center = look_from;
@@ -99,7 +98,7 @@ class Camera {
       u = glm::normalize(glm::cross(vup, w));  // camera right direction
       v = glm::cross(w, u);                    // camera up direction
 
-      // the vectors vu and vv define the viewport in the world coordinates
+      // the vectors vu and vv define the viewport in the scene coordinates
       // the viewport is centered at the camera, and the camera is looking towards the negative z-axis
       Vec viewport_u = u * viewport_width;
       Vec viewport_v = -v * viewport_height;
@@ -126,32 +125,36 @@ class Camera {
         pixels[j].resize(image_width);
     }
 
-    // returns the colour of the ray after it hits the world
-    Colour ray_colour(const Ray& r, int depth) const {
-      // if we've exceeded the ray bounce limit, no more light is gathered
+    // returns the colour of the ray after it hits the scene
+    Colour trace_ray(const Ray& r, int depth) const {
+      // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth <= 0)
-        return background_colour;
+        return scene.ambient_light_colour;
 
-      // try to hit an object in the world, starting at 0.0001 to avoid self-intersection
+      // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
       // misses are considered as background colour
-      HitRecord rec;
-      if (!world.hit(r, Interval(0.0001, infinity), rec))
-        return background_colour;
+      HitRecord hitrec;
+      if (!scene.hit(r, Interval(0.0001, infinity), hitrec))
+        return scene.ambient_light_colour;
 
-      // HIT ! Check if material emits light
+      // HIT ! if object is a light, return its emission colour
       Colour emitted;
-      if (rec.material->emit(emitted))
-        // rays that travelled far into the scene are less visible
-        return emitted * (static_cast<double>(depth)/max_depth);
+      if (hitrec.object->material->emit(emitted))
+        return emitted;
+
+      // phong shading
+      Colour shading;
+      if (hitrec.object->material->shade(r, hitrec, scene, shading))
+        return shading;
 
       // (recursively) bounce ray at the hit point, if the material allows it
       Ray new_ray;
       Colour attenuation;
-      if (rec.material->bounce(r, rec, attenuation, new_ray))
-        return attenuation * ray_colour(new_ray, depth-1);
+      if (hitrec.object->material->bounce(r, hitrec, attenuation, new_ray))
+        return attenuation * trace_ray(new_ray, depth-1);
 
-      // did not emit nor bounce -> the material absorbed the ray
-      return background_colour;
+      // unknown material, absorb the ray
+      return scene.ambient_light_colour;
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j

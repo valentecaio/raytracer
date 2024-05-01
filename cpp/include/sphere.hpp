@@ -2,16 +2,16 @@
 #define SPHERE_H
 
 #include "common.hpp"
-#include "hittable.hpp"
+#include "instance.hpp"
 #include "interval.hpp"
 #include "material.hpp"
 
 namespace raytracer {
 
-class Sphere : public Hittable {
+class Sphere : public Instance {
   public:
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
-      : center(_center), radius(max(0.0, _radius)), material(_material) {}
+      : center(_center), radius(max(0.0, _radius)) { material = _material; }
 
     bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
@@ -40,16 +40,19 @@ class Sphere : public Hittable {
       // HIT !
       rec.t = root;
       rec.p = ray.at(rec.t);
-      rec.material = material;
+      rec.object = shared_from_this();
       Vec outward_normal = (rec.p-center)/radius;  // normalized outward normal
       rec.set_face_normal(ray, outward_normal);    // store the face orientation
       return true;
     }
 
+    Point get_sample() const override {
+      return center; // TODO: random point on the sphere
+    }
+
   private:
     Point center;
     double radius;
-    shared_ptr<Material> material;
 };
 
 } // namespace raytracer

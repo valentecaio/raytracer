@@ -2,15 +2,17 @@
 #define QUAD_H
 
 #include "common.hpp"
-#include "hittable.hpp"
+#include "instance.hpp"
 
 namespace raytracer {
 
 // A Quad is defined by an origin point and two vectors that define the plane where the quad lies
-class Quad : public Hittable {
+class Quad : public Instance {
   public:
     Quad(const Point& _origin, const Vec& _u, const Vec& _v, const shared_ptr<Material>& _material)
-      : origin(_origin), u(_u), v(_v), material(_material) {
+      : origin(_origin), u(_u), v(_v) {
+        material = _material;
+
         // the normal is ortogonal to the two vectors that define the quad
         Vec n = glm::cross(u, v);
         normal = glm::normalize(n);
@@ -58,17 +60,20 @@ class Quad : public Hittable {
       rec.t = t;
       rec.p = p;
       rec.set_face_normal(r, normal);
-      rec.material = material;
+      rec.object = shared_from_this();
       return true;
+    }
+
+    Point get_sample() const override {
+      return sample_quad(origin, u, v);
     }
 
   private:
     Point origin; // origin point of the quad
-    Vec normal;   // normal vector to the quad
+    Vec normal;   // normal vector to the quad, normalized
     Vec u, v;     // two vectors that define the quad
     Vec w;        // constant used to find the planar coordinates of a point
     double d;     // constant term of the plane equation [ax + by + cz = d]
-    shared_ptr<Material> material;
 };
 
 } // namespace raytracer

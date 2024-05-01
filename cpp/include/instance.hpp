@@ -36,7 +36,7 @@ class Instance : public std::enable_shared_from_this<Instance> {
     shared_ptr<Material> material; // material of the object
 
     virtual ~Instance() = default;
-    virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const = 0;
+    virtual bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const = 0;
     virtual Point get_sample() const = 0;
 };
 

@@ -13,7 +13,7 @@ class Sphere : public Instance {
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
       : center(_center), radius(max(0.0, _radius)) { material = _material; }
 
-    bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override {
+    bool hit(const Ray& ray, Interval ray_t, HitRecord& hitrec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
       Vec oc = ray.origin() - center;                      // oc = A-C
       double a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
@@ -38,11 +38,11 @@ class Sphere : public Instance {
       }
 
       // HIT !
-      rec.t = root;
-      rec.p = ray.at(rec.t);
-      rec.object = shared_from_this();
-      Vec outward_normal = (rec.p-center)/radius;  // normalized outward normal
-      rec.set_face_normal(ray, outward_normal);    // store the face orientation
+      hitrec.t = root;
+      hitrec.p = ray.at(hitrec.t);
+      hitrec.object = shared_from_this();
+      Vec outward_normal = (hitrec.p-center)/radius;  // normalized outward normal
+      hitrec.set_face_normal(ray, outward_normal);    // store the face orientation
       return true;
     }
 

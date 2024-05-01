@@ -35,7 +35,7 @@ class Material {
 };
 
 
-// A light material that emits light
+// A material that emits light
 class Light : public Material {
   public:
     Colour colour;
@@ -59,6 +59,7 @@ class Phong : public Material {
       Colour ambient_term = albedo * scene.ambient_light_colour;
       Colour diffuse_term = Colour(0, 0, 0);
       Colour specular_term = Colour(0, 0, 0);
+      double nsamples = 1;
 
       // view direction is the opposite of the incoming ray direction (already normalized)
       Vec view_dir = -r_in.direction();
@@ -66,24 +67,26 @@ class Phong : public Material {
       // try to hit lights in the scene to calculate the shading
       for (const auto& light : scene.lights) {
         HitRecord tmp_hitrec;
-        Point sample = light->get_sample();
-        Vec light_dir = glm::normalize(sample - hitrec.p);
-        auto shadow_ray = Ray(hitrec.p, light_dir);
-        if (scene.hit(shadow_ray, Interval(0.0001, infinity), tmp_hitrec) && tmp_hitrec.object == light) {
-          // light is visible from the hit point
-          auto light_mat = std::dynamic_pointer_cast<Light>(light->material);
+        for (int i = 0; i < static_cast<int>(nsamples); i++) {
+          Point sample = light->get_sample();
+          Vec light_dir = glm::normalize(sample - hitrec.p);
+          auto shadow_ray = Ray(hitrec.p, light_dir);
+          if (scene.hit(shadow_ray, Interval(0.0001, infinity), tmp_hitrec) && tmp_hitrec.object == light) {
+            // light is visible from the hit point
+            auto light_mat = std::dynamic_pointer_cast<Light>(light->material);
 
-          // diffuse
-          double NdotL = max(glm::dot(hitrec.normal, light_dir), 0.0);
-          diffuse_term += albedo * light_mat->colour * light_mat->intensity * NdotL;
+            // diffuse
+            double NdotL = max(glm::dot(hitrec.normal, light_dir), 0.0);
+            diffuse_term += albedo * light_mat->colour * light_mat->intensity * NdotL;
 
-          // specular
-          Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hitrec.normal));
-          double RdotV = std::pow(max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
-          specular_term += light_mat->colour * light_mat->intensity * RdotV;
+            // specular
+            Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hitrec.normal));
+            double RdotV = std::pow(max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
+            specular_term += light_mat->colour * light_mat->intensity * RdotV;
+          }
         }
       }
-      result = ambient_term + diffuse_term + specular_term;
+      result = ambient_term + (diffuse_term/nsamples) + (specular_term/nsamples);
       return true;
     }
 
@@ -115,7 +118,7 @@ class Lambertian : public Material {
 };
 
 
-// A Metal material that reflects rays
+// A Metal / Mirror material that reflects rays
 class Metal : public Material {
   public:
     Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(min(_fuzz, 1.0)) {}
@@ -134,7 +137,7 @@ class Metal : public Material {
 };
 
 
-// A Dielectric material that always refracts rays (glass)
+// A Dielectric (glass) material that refracts rays when possible and reflects them otherwise
 class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}

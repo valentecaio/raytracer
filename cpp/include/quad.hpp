@@ -31,7 +31,7 @@ class Quad : public Instance {
 
     // the intersection of a ray with a quad is the intersection of the ray with the plane
     // where the quad lies. The intersection point is then checked to be inside the quad
-    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
       double denom = glm::dot(normal, r.direction());
 
       // ray and plane are parallels -> no intersection
@@ -57,10 +57,10 @@ class Quad : public Instance {
         return false;
 
       // HIT !
-      rec.t = t;
-      rec.p = p;
-      rec.set_face_normal(r, normal);
-      rec.object = shared_from_this();
+      hitrec.t = t;
+      hitrec.p = p;
+      hitrec.set_face_normal(r, normal);
+      hitrec.object = shared_from_this();
       return true;
     }
 

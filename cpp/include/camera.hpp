@@ -137,7 +137,9 @@ class Camera {
       if (!scene.hit(r, Interval(0.0001, infinity), hitrec))
         return scene.ambient_light_colour;
 
-      // HIT ! if object is a light, return its emission colour
+      // HIT !
+
+      // check if hit object is a light -> return its emission colour
       Colour emitted;
       if (hitrec.object->material->emit(emitted))
         return emitted;

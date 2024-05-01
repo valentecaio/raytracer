@@ -7,24 +7,24 @@
 
 using namespace raytracer;
 
-namespace vec {
+namespace raytracer::vec {
 
 // returns a random Vec in [0,1)^3.
 inline Vec random() {
-  return Vec(random_double(), random_double(), random_double());
+  return Vec(utils::random(), utils::random(), utils::random());
 }
 
 // returns a random Vec in [min,max)^3.
 inline Vec random(double min, double max) {
-  return Vec(random_double(min, max), random_double(min, max), random_double(min, max));
+  return Vec(utils::random(min, max), utils::random(min, max), utils::random(min, max));
 }
 
 // returns a random unit vector (a point on the surface of the unit sphere).
 inline Vec random_unit() {
-  double z = 1 - 2*random_double();    // z = random in [-1,1]
+  double z = 1 - 2*utils::random();    // z = random in [-1,1]
 
   double r = sqrt(1 - z*z);
-  double phi = 2*M_PI*random_double(); // phi = random in [0, 2pi)
+  double phi = 2*M_PI*utils::random(); // phi = random in [0, 2pi)
 
   double x = r*cos(phi);
   double y = r*sin(phi);
@@ -40,7 +40,7 @@ inline Vec random_unit_hemisphere(const Vec& normal) {
 
 // returns a random Vec inside the unit disk (z=0)
 inline Vec random_in_unit_disk() {
-  double phi = 2*M_PI*random_double(); // phi = random in [0, 2pi)
+  double phi = 2*M_PI*utils::random(); // phi = random in [0, 2pi)
   return Vec(cos(phi), sin(phi), 0);
 }
 
@@ -72,6 +72,6 @@ inline void print(const Vec& v) {
   std::clog << "{" << v.x << ", " << v.y << ", " << v.z << "}" << std::endl;
 }
 
-} // namespace vec
+} // namespace raytracer::vec
 
 #endif // VEC_H

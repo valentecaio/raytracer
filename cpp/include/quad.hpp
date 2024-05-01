@@ -65,7 +65,7 @@ class Quad : public Instance {
     }
 
     Point get_sample() const override {
-      return sample_quad(origin, u, v);
+      return utils::sample_quad(origin, u, v);
     }
 
   private:

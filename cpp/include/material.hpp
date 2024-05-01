@@ -95,7 +95,6 @@ class Phong : public Material {
     double shininess;
 };
 
-
 // A Diffuse material that bounces rays in random directions
 class Lambertian : public Material {
   public:
@@ -151,7 +150,7 @@ class Dielectric : public Material {
       bool can_refract = ri * sin_theta <= 1.0;
 
       Vec direction;
-      if (!can_refract || reflectance(cos_theta, ri) > random_double())
+      if (!can_refract || reflectance(cos_theta, ri) > utils::random())
         direction = glm::reflect(r_in.direction(), hitrec.normal);
       else
         direction = glm::refract(r_in.direction(), hitrec.normal, ri);

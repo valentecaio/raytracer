@@ -11,13 +11,6 @@
 
 using namespace raytracer;
 
-void render_scene(Camera& camera) {
-  auto start = std::chrono::high_resolution_clock::now();
-  camera.render();
-  auto end = std::chrono::high_resolution_clock::now();
-  std::clog << "\nRender time: " << std::chrono::duration<double>(end-start).count() << " seconds" << std::endl;
-}
-
 
 void cornell_box(bool use_phong) {
   Scene scene;
@@ -55,7 +48,7 @@ void cornell_box(bool use_phong) {
   camera.look_from = Point(278, 278, -800);
   camera.look_at = Point(278, 278, 0);
 
-  render_scene(camera);
+  utils::clock([&camera]() { camera.render(); });
 }
 
 
@@ -99,7 +92,7 @@ void quads(bool use_phong) {
   camera.look_from = Point(0,0,9);
   camera.look_at = Point(0,0,0);
 
-  render_scene(camera);
+  utils::clock([&camera]() { camera.render(); });
 }
 
 
@@ -108,20 +101,26 @@ void spheres(bool use_phong) {
   Scene scene;
 
   scene.ambient_light_colour = Colour(0.05, 0.05, 0.05);
-  auto material_light  = make_shared<Light>(Colour(1, 1, 0), 10);
+  auto material_light  = make_shared<Light>(Colour(1, 1, 0), 1);
   scene.add_light(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_light));
 
-  auto material_ground = make_shared<Lambertian>(Colour(0.8, 0.8, 0.0));
-  auto material_center = make_shared<Lambertian>(Colour(0.1, 0.2, 0.5));
-  auto material_metal1 = make_shared<Metal>(Colour(0.4, 0.4, 0.4), 0.0);
-  auto material_metal2 = make_shared<Metal>(Colour(0.2, 0.8, 0.2), 0.2);
-  auto material_glass  = make_shared<Dielectric>(1.5);
-  auto material_bubble = make_shared<Dielectric>(1.0/1.5);
-  scene.add_object(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
-  scene.add_object(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, material_center));
-  scene.add_object(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, material_metal1));
-  scene.add_object(make_shared<Sphere>(Point( 0.3,   -0.1, -0.7), 0.2, material_glass));
-  // scene.add(make_shared<Sphere>(Point( 0.3,  -0.15, -0.7), 0.15, material_bubble));
+  shared_ptr<Material> ground, center;
+  if (use_phong) {
+    ground = (shared_ptr<Material>) make_shared<Phong>(Colour(0.8, 0.8, 0.0), 100);
+    center = (shared_ptr<Material>) make_shared<Phong>(Colour(0.1, 0.2, 0.5), 100);
+  } else {
+    ground = (shared_ptr<Material>) make_shared<Lambertian>(Colour(0.8, 0.8, 0.0));
+    center = (shared_ptr<Material>) make_shared<Lambertian>(Colour(0.1, 0.2, 0.5));
+  }
+  auto metal1 = make_shared<Metal>(Colour(0.4, 0.4, 0.4), 0.0);
+  auto metal2 = make_shared<Metal>(Colour(0.2, 0.8, 0.2), 0.2);
+  auto glass  = make_shared<Dielectric>(1.5);
+  auto bubble = make_shared<Dielectric>(1.0/1.5);
+  scene.add_object(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, ground));
+  scene.add_object(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, center));
+  scene.add_object(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, metal1));
+  scene.add_object(make_shared<Sphere>(Point( 0.3,   -0.1, -0.7), 0.2, glass));
+  // scene.add(make_shared<Sphere>(Point( 0.3,  -0.15, -0.7), 0.15, bubble));
 
 
   /////////////////////
@@ -138,7 +137,7 @@ void spheres(bool use_phong) {
   camera.defocus_angle = 0;
   camera.focus_dist = 1;
 
-  render_scene(camera);
+  utils::clock([&camera]() { camera.render(); });
 }
 
 
@@ -173,16 +172,17 @@ void phong() {
   camera.defocus_angle = 0;
   camera.focus_dist = 1;
 
-  render_scene(camera);
+  utils::clock([&camera]() { camera.render(); });
 }
 
 int main() {
-  switch (3) {
-    case 0: cornell_box(false); break;
-    case 1: cornell_box(true); break;
-    case 2: quads(false); break;
-    case 3: quads(true); break;
-    case 4: spheres(false); break;
-    case 5: phong(); break;
+  switch (6) {
+    case 0: phong(); break;
+    case 1: cornell_box(false); break;
+    case 2: cornell_box(true); break;
+    case 3: quads(false); break;
+    case 4: quads(true); break;
+    case 5: spheres(false); break;
+    case 6: spheres(true); break;
   }
 }

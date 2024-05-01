@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "scene.hpp"
 #include "sphere.hpp"
-#include "image.hpp"
 #include "utils.hpp"
 #include "material.hpp"
 
@@ -56,14 +55,14 @@ class Camera {
           pixels[j][i] = pixel_colour/static_cast<double>(samples_per_pixel);
         }
       }
-      write_image(image_width, image_height, pixels);
+      utils::write_image(image_width, image_height, pixels);
     }
 
 
   private:
     int image_height;         // image height in pixel count
     Point center;             // camera center
-    Point pixel00_loc;        // location of pixel {0, 0}
+    Point viewport_origin;    // upper left corner of the viewport
     Vec pixel_delta_u;        // offset to pixel to the right
     Vec pixel_delta_v;        // offset to pixel below
     Vec u, v, w;              // camera coordinate system
@@ -111,8 +110,7 @@ class Camera {
       // the top left corner of the image has coordinates (0, 0), and the bottom right
       // corner has coordinates (image_width, image_height).
       // we must calculate the location of the upper left pixel in the viewport coordinates
-      Point viewport_upper_left = center - (focus_dist * w) - viewport_u/2.0 - viewport_v/2.0;
-      pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+      viewport_origin = center - (focus_dist * w) - viewport_u/2.0 - viewport_v/2.0;
 
       // camera defocus disk factors
       double defocus_radius = focus_dist * glm::tan(glm::radians(defocus_angle)/2.0);
@@ -161,22 +159,13 @@ class Camera {
 
     // get a randomly sampled camera ray for the pixel at location i,j
     Ray get_ray(int i, int j) const {
-      Point pixel_center = pixel00_loc
-                         + (static_cast<double>(i) * pixel_delta_u)
-                         + (static_cast<double>(j) * pixel_delta_v);
-      Point pixel_sample = pixel_center + pixel_sample_square();
+      Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);
+      Point pixel_sample = utils::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
 
       Point ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
       Vec ray_direction = pixel_sample - ray_origin;
 
       return Ray(ray_origin, ray_direction);
-    }
-
-    // returns a random point in the square surrounding a pixel at the origin
-    Point pixel_sample_square() const {
-      double px = -0.5 + random_double();
-      double py = -0.5 + random_double();
-      return (px * pixel_delta_u) + (py * pixel_delta_v);
     }
 
     // returns a random point in the camera defocus disk.

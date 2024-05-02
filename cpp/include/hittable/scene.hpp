@@ -25,7 +25,7 @@ class Scene : public Hittable {
       lights.clear();
     }
 
-    void add(shared_ptr<Primitive> object) {
+    void add(shared_ptr<HittableGeometry> object) {
       if (std::dynamic_pointer_cast<Light>(object->material)) {
         lights.add(object);
       } else {

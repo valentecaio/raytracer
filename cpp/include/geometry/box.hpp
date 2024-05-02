@@ -11,7 +11,7 @@
 namespace raytracer {
 
 // A hittable box in 3D space defined by a list of 6 quads.
-class Box : public HittableList, public Primitive {
+class Box : public HittableList, public HittableGeometry {
   public:
     Box(const Point& a, const Point& b, shared_ptr<Material> mat) {
       auto pmin = Point(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));

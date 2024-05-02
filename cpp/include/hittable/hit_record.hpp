@@ -7,14 +7,14 @@
 namespace raytracer {
 
 // Forward declarations to avoid circular dependencies.
-class Primitive;
+class HittableGeometry;
 
 // The HitRecord class stores information about a ray-object intersection.
 class HitRecord {
   public:
     Point p;                                   // hit point
     Vec normal;                                // normal vector at the hit point, normalized
-    shared_ptr<const Primitive> object; // object that was hit
+    shared_ptr<const HittableGeometry> object; // object that was hit
     double t;                                  // ray parametrized distance at hit point
     bool front_face;                           // true if the ray hit the front face of the object
 

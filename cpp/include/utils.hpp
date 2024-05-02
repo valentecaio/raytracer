@@ -9,6 +9,10 @@ namespace raytracer::utils {
 
 // RANDOM GENERATION UTILS //
 
+inline double random_int(int min, int max) {
+  return min + rand() % (max - min + 1);
+}
+
 // returns a random real in [0,1).
 inline double random() {
   return rand() / (RAND_MAX + 1.0);

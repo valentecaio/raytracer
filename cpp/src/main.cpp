@@ -8,6 +8,7 @@
 #include "material.hpp"
 #include "sphere.hpp"
 #include "quad.hpp"
+#include "box.hpp"
 
 using namespace raytracer;
 
@@ -15,10 +16,12 @@ using namespace raytracer;
 void cornell_box(bool use_phong) {
   Scene scene;
 
+  // light
   scene.ambient_light_colour = Colour(0.03, 0.03, 0.03);
-  auto material_light = make_shared<Light>(Colour(1, 1, 1), 1);
-  scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), material_light));
+  auto mat_light = make_shared<Light>(Colour(1, 1, 1), 0.2);
+  scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
 
+  // walls
   shared_ptr<Material> red, white, green;
   if (use_phong) {
     red   = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 100);
@@ -29,12 +32,19 @@ void cornell_box(bool use_phong) {
     white = (shared_ptr<Material>) make_shared<Lambertian>(Colour(.73, .73, .73));
     green = (shared_ptr<Material>) make_shared<Lambertian>(Colour(.12, .45, .15));
   }
-  scene.add(make_shared<Quad>(Point(555,0,0), Vec(0,555,0), Vec(0,0,555), green));
-  scene.add(make_shared<Quad>(Point(0,0,0), Vec(0,555,0), Vec(0,0,555), red));
-  scene.add(make_shared<Quad>(Point(0,0,0), Vec(555,0,0), Vec(0,0,555), white));
-  scene.add(make_shared<Quad>(Point(555,555,555), Vec(-555,0,0), Vec(0,0,-555), white));
-  scene.add(make_shared<Quad>(Point(0,0,555), Vec(555,0,0), Vec(0,555,0), white));
+  scene.add(make_shared<Quad>(Point(555,0,0), Vec(0,555,0), Vec(0,0,555), green)); // left
+  scene.add(make_shared<Quad>(Point(0,0,0), Vec(0,555,0), Vec(0,0,555), red));     // right
+  scene.add(make_shared<Quad>(Point(0,0,0), Vec(555,0,0), Vec(0,0,555), white));   // floor
+  scene.add(make_shared<Quad>(Point(555,555,555), Vec(-555,0,0), Vec(0,0,-555), white)); // ceiling
+  scene.add(make_shared<Quad>(Point(0,0,555), Vec(555,0,0), Vec(0,555,0), white)); // back
 
+  // boxes
+  scene.add(make_shared<Box>(Point(130, 0, 65), Point(295, 165, 230), white));
+  scene.add(make_shared<Box>(Point(265, 0, 295), Point(430, 330, 460), white));
+
+  // mirror sphere above big box
+  auto mirror = make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
+  scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, mirror));
 
   /////////////////////
 
@@ -42,7 +52,7 @@ void cornell_box(bool use_phong) {
 
   camera.aspect_ratio = 1.0;
   camera.image_width = 600;
-  camera.samples_per_pixel = 5;
+  camera.samples_per_pixel = 10;
   camera.max_depth = 15;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
@@ -176,7 +186,8 @@ void phong() {
 }
 
 int main() {
-  switch (4) {
+  // false to use Lambertian, true to use Phong
+  switch (2) {
     case 0: phong(); break;
     case 1: cornell_box(false); break;
     case 2: cornell_box(true); break;

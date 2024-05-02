@@ -14,10 +14,15 @@ class HittableList : public Hittable {
     std::vector<shared_ptr<HittableGeometry>> objects;
 
     HittableList() = default;
-    HittableList(shared_ptr<HittableGeometry> object) { add(object); }
+    ~HittableList() = default;
 
-    void clear() { objects.clear(); }
-    void add(shared_ptr<HittableGeometry> object) { objects.push_back(object); }
+    void clear() {
+      objects.clear();
+    }
+
+    void add(shared_ptr<HittableGeometry> object) {
+      objects.push_back(object);
+    }
 
     bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
       HitRecord temp_hitrec;

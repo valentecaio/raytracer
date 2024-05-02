@@ -1,8 +1,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "common.hpp"
-#include "interval.hpp"
+#include "../common.hpp"
+#include "../interval.hpp"
 #include "hittable_list.hpp"
 
 namespace raytracer {

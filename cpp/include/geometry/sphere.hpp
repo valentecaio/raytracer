@@ -2,9 +2,10 @@
 #define SPHERE_H
 
 #include "common.hpp"
-#include "hittable_geometry.hpp"
-#include "interval.hpp"
-#include "material.hpp"
+#include "../hittable/hit_record.hpp"
+#include "../hittable/hittable_geometry.hpp"
+#include "../interval.hpp"
+#include "../material.hpp"
 
 namespace raytracer {
 

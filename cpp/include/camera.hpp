@@ -2,9 +2,9 @@
 #define CAMERA_H
 
 #include "common.hpp"
-#include "scene.hpp"
-#include "utils.hpp"
 #include "material.hpp"
+#include "utils.hpp"
+#include "hittable/scene.hpp"
 
 namespace raytracer {
 

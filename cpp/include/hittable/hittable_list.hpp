@@ -1,9 +1,9 @@
 #ifndef HIT_LIST_H
 #define HIT_LIST_H
 
-#include "common.hpp"
-#include "hittable_geometry.hpp"
+#include "../common.hpp"
 #include "hittable.hpp"
+#include "hittable_geometry.hpp"
 #include "hit_record.hpp"
 
 namespace raytracer {

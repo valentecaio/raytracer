@@ -5,7 +5,7 @@
 #include "ray.hpp"
 #include "utils.hpp"
 #include "vec.hpp"
-#include "scene.hpp"
+#include "hittable/scene.hpp"
 
 namespace raytracer {
 

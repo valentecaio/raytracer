@@ -3,12 +3,12 @@
 #include <chrono>
 
 #include "common.hpp"
-#include "scene.hpp"
 #include "camera.hpp"
 #include "material.hpp"
-#include "sphere.hpp"
-#include "quad.hpp"
-#include "box.hpp"
+#include "hittable/scene.hpp"
+#include "geometry/sphere.hpp"
+#include "geometry/quad.hpp"
+#include "geometry/box.hpp"
 
 using namespace raytracer;
 

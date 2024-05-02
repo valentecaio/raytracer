@@ -1,8 +1,8 @@
 #ifndef HITRECORD_H
 #define HITRECORD_H
 
-#include "common.hpp"
-#include "ray.hpp"
+#include "../common.hpp"
+#include "../ray.hpp"
 
 namespace raytracer {
 

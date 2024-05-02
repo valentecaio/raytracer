@@ -1,7 +1,7 @@
 #ifndef HIT_GEOMETRY_HPP
 #define HIT_GEOMETRY_HPP
 
-#include "common.hpp"
+#include "../common.hpp"
 #include "hittable.hpp"
 
 namespace raytracer {

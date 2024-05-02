@@ -2,11 +2,11 @@
 #define QUAD_H
 
 #include "common.hpp"
-#include "hittable_geometry.hpp"
-#include "hittable.hpp"
-#include "hit_record.hpp"
-#include "material.hpp"
-#include "utils.hpp"
+#include "../hittable/hit_record.hpp"
+#include "../hittable/hittable_geometry.hpp"
+#include "../interval.hpp"
+#include "../material.hpp"
+#include "../utils.hpp"
 
 namespace raytracer {
 

@@ -1,9 +1,11 @@
 #ifndef BOX_HPP
 #define BOX_HPP
 
-#include "common.hpp"
-#include "hittable_geometry.hpp"
-#include "material.hpp"
+#include "../common.hpp"
+#include "../hittable/hit_record.hpp"
+#include "../hittable/hittable_geometry.hpp"
+#include "../interval.hpp"
+#include "../material.hpp"
 #include "quad.hpp"
 
 namespace raytracer {

@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "common.hpp"
+#include "utils/common.hpp"
 
 namespace raytracer {
 

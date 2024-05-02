@@ -1,11 +1,11 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include "common.hpp"
-#include "ray.hpp"
-#include "utils.hpp"
-#include "vec.hpp"
+#include "utils/common.hpp"
+#include "utils/utils.hpp"
+#include "utils/vec.hpp"
 #include "hittable/scene.hpp"
+#include "ray.hpp"
 
 namespace raytracer {
 

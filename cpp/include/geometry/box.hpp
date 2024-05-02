@@ -1,17 +1,17 @@
 #ifndef BOX_HPP
 #define BOX_HPP
 
-#include "../common.hpp"
+#include "../utils/common.hpp"
+#include "../utils/interval.hpp"
 #include "../hittable/hit_record.hpp"
 #include "../hittable/hittable_geometry.hpp"
-#include "../interval.hpp"
 #include "../material.hpp"
 #include "quad.hpp"
 
 namespace raytracer {
 
 // A hittable box in 3D space defined by a list of 6 quads.
-class Box : public HittableList, public HittableGeometry {
+class Box : public HittableList, public Primitive {
   public:
     Box(const Point& a, const Point& b, shared_ptr<Material> mat) {
       auto pmin = Point(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));

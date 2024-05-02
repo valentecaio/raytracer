@@ -1,7 +1,7 @@
 #ifndef HIT_GEOMETRY_HPP
 #define HIT_GEOMETRY_HPP
 
-#include "../common.hpp"
+#include "../utils/common.hpp"
 #include "hittable.hpp"
 
 namespace raytracer {
@@ -10,11 +10,11 @@ namespace raytracer {
 class Material;
 
 // Abstract class that represents an instance of a geometric object in the scene.
-class HittableGeometry : public std::enable_shared_from_this<HittableGeometry>, public Hittable {
+class Primitive : public std::enable_shared_from_this<Primitive>, public Hittable {
   public:
     shared_ptr<Material> material; // material of the object
 
-    virtual ~HittableGeometry() = default;
+    virtual ~Primitive() = default;
     virtual Point get_sample() const = 0;
 };
 

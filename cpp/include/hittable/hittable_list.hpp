@@ -1,7 +1,7 @@
 #ifndef HIT_LIST_H
 #define HIT_LIST_H
 
-#include "../common.hpp"
+#include "../utils/common.hpp"
 #include "hittable.hpp"
 #include "hittable_geometry.hpp"
 #include "hit_record.hpp"
@@ -11,7 +11,7 @@ namespace raytracer {
 // The HittableList class is a list of hittable geometry objects.
 class HittableList : public Hittable {
   public:
-    std::vector<shared_ptr<HittableGeometry>> objects;
+    std::vector<shared_ptr<Primitive>> objects;
 
     HittableList() = default;
     ~HittableList() = default;
@@ -20,7 +20,7 @@ class HittableList : public Hittable {
       objects.clear();
     }
 
-    void add(shared_ptr<HittableGeometry> object) {
+    void add(shared_ptr<Primitive> object) {
       objects.push_back(object);
     }
 

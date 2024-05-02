@@ -1,10 +1,10 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "common.hpp"
+#include "../utils/common.hpp"
+#include "../utils/interval.hpp"
 #include "../hittable/hit_record.hpp"
 #include "../hittable/hittable_geometry.hpp"
-#include "../interval.hpp"
 #include "../material.hpp"
 
 namespace raytracer {

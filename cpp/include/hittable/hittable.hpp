@@ -1,9 +1,9 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
-#include "../common.hpp"
+#include "../utils/common.hpp"
+#include "../utils/interval.hpp"
 #include "../ray.hpp"
-#include "../interval.hpp"
 #include "hit_record.hpp"
 
 namespace raytracer {

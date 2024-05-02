@@ -2,13 +2,13 @@
 
 #include <chrono>
 
-#include "common.hpp"
-#include "camera.hpp"
-#include "material.hpp"
+#include "utils/common.hpp"
 #include "hittable/scene.hpp"
 #include "geometry/sphere.hpp"
 #include "geometry/quad.hpp"
 #include "geometry/box.hpp"
+#include "camera.hpp"
+#include "material.hpp"
 
 using namespace raytracer;
 

@@ -1,8 +1,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "../common.hpp"
-#include "../interval.hpp"
+#include "../utils/common.hpp"
+#include "../utils/interval.hpp"
 #include "hittable_list.hpp"
 
 namespace raytracer {
@@ -25,7 +25,7 @@ class Scene : public Hittable {
       lights.clear();
     }
 
-    void add(shared_ptr<HittableGeometry> object) {
+    void add(shared_ptr<Primitive> object) {
       if (std::dynamic_pointer_cast<Light>(object->material)) {
         lights.add(object);
       } else {

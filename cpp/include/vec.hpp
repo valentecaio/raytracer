@@ -1,4 +1,3 @@
-// this header defines the vec utils in the vec namespace 
 #ifndef VEC_H
 #define VEC_H
 
@@ -7,6 +6,7 @@
 
 using namespace raytracer;
 
+// The Vec namespace contains utility functions for vectors.
 namespace raytracer::vec {
 
 // returns a random Vec in [0,1)^3.

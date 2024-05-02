@@ -5,6 +5,7 @@
 
 namespace raytracer {
 
+// The Ray class represents a ray in 3D space.
 class Ray {
   public:
     Ray() {}

@@ -3,12 +3,12 @@
 
 #include "common.hpp"
 #include "scene.hpp"
-#include "sphere.hpp"
 #include "utils.hpp"
 #include "material.hpp"
 
 namespace raytracer {
 
+// A camera that can render a scene.
 class Camera {
   public:
     double aspect_ratio = 1.0;      // ratio width/height

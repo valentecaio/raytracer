@@ -1,9 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-
 #include "common.hpp"
 
+// The utils namespace contains utility functions that are used throughout the raytracer.
 namespace raytracer::utils {
 
 

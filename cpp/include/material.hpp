@@ -9,9 +9,10 @@
 
 namespace raytracer {
 
-// forward declarations
+// Forward declarations to avoid circular dependencies
 class HitRecord;
 
+// Abstract class that represents a material that can be applied to objects in the scene.
 class Material {
   public:
     // constructors and destructors
@@ -67,7 +68,7 @@ class Phong : public Material {
       Vec view_dir = -r_in.direction();
 
       // try to hit lights in the scene to calculate the shading
-      for (const auto& light : scene.lights) {
+      for (const auto& light : scene.lights.objects) {
         HitRecord tmp_hitrec;
         for (int i = 0; i < static_cast<int>(nsamples); i++) {
           Point sample = light->get_sample();
@@ -97,30 +98,6 @@ class Phong : public Material {
     double shininess;
 };
 
-/*
-class PhongMetal : public Material {
-  public:
-    PhongMetal(const Colour& _albedo, double _shininess, double _fuzz)
-      : albedo(_albedo), shininess(_shininess), fuzz(min(_fuzz, 1.0)) {}
-
-    bool shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& result) const override {
-      // R = Schlick's approximation for reflectance
-      // c = (1-R) * Phong shading
-
-      // Vec reflected = glm::reflect(r_in.direction(), hitrec.normal);
-      // reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
-      // ray = Ray(hitrec.p, reflected);
-
-      // c += R * trace_ray(ray);
-    }
-
-  private:
-    Colour albedo;
-    double shininess;
-    double fuzz;
-  };
-}
-*/
 
 // A Diffuse material that bounces rays in random directions
 class Lambertian : public Material {

@@ -2,12 +2,16 @@
 #define QUAD_H
 
 #include "common.hpp"
-#include "instance.hpp"
+#include "hittable_geometry.hpp"
+#include "hittable.hpp"
+#include "hit_record.hpp"
+#include "material.hpp"
+#include "utils.hpp"
 
 namespace raytracer {
 
-// A Quad is defined by an origin point and two vectors that define the plane where the quad lies
-class Quad : public Instance {
+// A Quad is defined by an origin point and two vectors that define the plane where the quad lies.
+class Quad : public HittableGeometry {
   public:
     Quad(const Point& _origin, const Vec& _u, const Vec& _v, const shared_ptr<Material>& _material)
       : origin(_origin), u(_u), v(_v) {

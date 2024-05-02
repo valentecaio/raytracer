@@ -42,7 +42,7 @@ void cornell_box(bool use_phong) {
 
   camera.aspect_ratio = 1.0;
   camera.image_width = 600;
-  camera.samples_per_pixel = 20;
+  camera.samples_per_pixel = 5;
   camera.max_depth = 15;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
@@ -176,7 +176,7 @@ void phong() {
 }
 
 int main() {
-  switch (0) {
+  switch (4) {
     case 0: phong(); break;
     case 1: cornell_box(false); break;
     case 2: cornell_box(true); break;

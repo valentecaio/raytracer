@@ -2,25 +2,26 @@
 #define SPHERE_H
 
 #include "common.hpp"
-#include "instance.hpp"
+#include "hittable_geometry.hpp"
 #include "interval.hpp"
 #include "material.hpp"
 
 namespace raytracer {
 
-class Sphere : public Instance {
+// A hittable sphere in 3D space.
+class Sphere : public HittableGeometry {
   public:
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
       : center(_center), radius(max(0.0, _radius)) { material = _material; }
 
-    bool hit(const Ray& ray, Interval ray_t, HitRecord& hitrec) const override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
-      Vec oc = ray.origin() - center;                      // oc = A-C
-      double a = glm::dot(ray.direction(), ray.direction()); // a = dot(B, B)
-      double half_b = glm::dot(oc, ray.direction());         // b = 2*dot(oc, B)
+      Vec oc = r.origin() - center;                      // oc = A-C
+      double a = glm::dot(r.direction(), r.direction()); // a = dot(B, B)
+      double half_b = glm::dot(oc, r.direction());       // b = 2*dot(oc, B)
       double oc_length_squared = glm::dot(oc, oc);
-      double c = oc_length_squared - radius*radius;          // c = dot(oc, oc) - R*R
-      double delta = half_b*half_b - a*c;                    // delta = b*b - 4*a*c
+      double c = oc_length_squared - radius*radius;      // c = dot(oc, oc) - R*R
+      double delta = half_b*half_b - a*c;                // delta = b*b - 4*a*c
 
       // if delta is negative, there are no real roots
       // if delta is zero, there is one real root
@@ -32,17 +33,17 @@ class Sphere : public Instance {
       double sqrtd = sqrt(delta);
       double root = (-half_b - sqrtd) / a; // try nearest root
       if (!ray_t.contains(root)) {
-        root = (-half_b + sqrtd) / a;    // try second root
+        root = (-half_b + sqrtd) / a;      // try second root
         if (!ray_t.contains(root))
           return false; // both roots are outside the acceptable range
       }
 
       // HIT !
       hitrec.t = root;
-      hitrec.p = ray.at(hitrec.t);
+      hitrec.p = r.at(hitrec.t);
       hitrec.object = shared_from_this();
       Vec outward_normal = (hitrec.p-center)/radius;  // normalized outward normal
-      hitrec.set_face_normal(ray, outward_normal);    // store the face orientation
+      hitrec.set_face_normal(r, outward_normal);      // store the face orientation
       return true;
     }
 

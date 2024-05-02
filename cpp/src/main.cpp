@@ -6,6 +6,7 @@
 #include "hittable/scene.hpp"
 #include "geometry/sphere.hpp"
 #include "geometry/quad.hpp"
+#include "geometry/triangle.hpp"
 #include "geometry/box.hpp"
 #include "camera.hpp"
 #include "material.hpp"
@@ -52,7 +53,7 @@ void cornell_box(bool use_phong) {
 
   camera.aspect_ratio = 1.0;
   camera.image_width = 600;
-  camera.samples_per_pixel = 10;
+  camera.samples_per_pixel = 3;
   camera.max_depth = 15;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);

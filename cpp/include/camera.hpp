@@ -170,6 +170,7 @@ class Camera {
 
     // returns a random point in the camera defocus disk.
     Point defocus_disk_sample() const {
+      // TODO: replace by utils::sample_disk
       Vec p = vec::random_in_unit_disk();
       return center + (p.x * defocus_u) + (p.y * defocus_v);
     }

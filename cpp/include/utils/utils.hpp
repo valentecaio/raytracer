@@ -9,10 +9,6 @@ namespace raytracer::utils {
 
 // RANDOM GENERATION UTILS //
 
-inline double random_int(int min, int max) {
-  return min + rand() % (max - min + 1);
-}
-
 // returns a random real in [0,1).
 inline double random() {
   return rand() / (RAND_MAX + 1.0);
@@ -23,10 +19,31 @@ inline double random(double min, double max) {
   return min + (max-min)*random();
 }
 
+// returns a random integer in [min,max].
+inline double random_int(int min, int max) {
+  return min + rand() % (max - min + 1);
+}
+
 // returns a random sample in the quad defined by the point p and the vectors u and v
 inline Point sample_quad(Point p, Vec u, Vec v) {
   return p + random()*u + random()*v;
 }
+
+// returns a random sample in the triangle defined by the point a and the vectors u and v
+inline Point sample_triangle(Point a, Vec u, Vec v) {
+  double alpha = random();
+  double beta = random();
+  if (alpha + beta > 1) {
+    alpha = 1 - alpha;
+    beta = 1 - beta;
+  }
+  return a + alpha*u + beta*v;
+}
+
+// TODO: TEST //
+inline Point sample_disk(double r) {
+  double phi = 2 * M_PI * random();   // phi = random in [0, 2pi)
+  return Point(cos(phi), sin(phi), 0);}
 
 
 // TEST UTILS //

@@ -11,6 +11,7 @@
 #include <algorithm>   // max, min
 #include <glm.hpp>     // glm::dvec3, glm::dot, glm::normalize
 #include <functional>  // std::function
+#include <chrono>      // std::chrono::high_resolution_clock
 
 
 /* USINGS */

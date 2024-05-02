@@ -1,12 +1,9 @@
 // main.cpp
 
-#include <chrono>
-
 #include "utils/common.hpp"
 #include "hittable/scene.hpp"
+#include "primitives/2d.hpp"
 #include "primitives/sphere.hpp"
-#include "primitives/quad.hpp"
-#include "primitives/triangle.hpp"
 #include "primitives/box.hpp"
 #include "camera.hpp"
 #include "material.hpp"
@@ -53,7 +50,7 @@ void cornell_box(bool use_phong) {
 
   camera.aspect_ratio = 1.0;
   camera.image_width = 600;
-  camera.samples_per_pixel = 3;
+  camera.samples_per_pixel = 10;
   camera.max_depth = 15;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
@@ -188,7 +185,7 @@ void phong() {
 
 int main() {
   // false to use Lambertian, true to use Phong
-  switch (2) {
+  switch (4) {
     case 0: phong(); break;
     case 1: cornell_box(false); break;
     case 2: cornell_box(true); break;

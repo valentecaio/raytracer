@@ -1,6 +1,3 @@
-// this file contains the class Primitive2D which is the base class for all 2D primitives
-// such as Circle, Ellipse, Quad, Triangle, etc.
-
 #ifndef PRIMITIVE2D_HPP
 #define PRIMITIVE2D_HPP
 
@@ -11,6 +8,7 @@
 #include "primitive.hpp"
 
 namespace raytracer {
+
 
 // Abstract class that represents an instance of a 2D geometric object in the scene.
 class Primitive2D : public Primitive {
@@ -54,6 +52,22 @@ class Primitive2D : public Primitive {
       return true;
     }
 
+  // should be called by the constructor of the derived class
+  // after setting the origin, u and v fields
+  void set_constants() {
+    // the normal is ortogonal to the two vectors that define the quad
+    Vec n = glm::cross(u, v);
+    normal = glm::normalize(n);
+
+    // d is the constant term of the plane equation [ax + by + cz = d]
+    // where (a, b, c) is the normal vector and (x, y, z) is the origin point
+    d = glm::dot(normal, origin);
+
+    // w is the constant used to find the planar coordinates alpha & beta
+    // of a point P in the uv plane (P = origin + u*alpha + v*beta)
+    w = n / glm::dot(n, n);
+  }
+
   // the following members must be defined at the constructor of the derived class
   protected:
     Point origin; // origin point of the primitive, in the plane
@@ -62,6 +76,51 @@ class Primitive2D : public Primitive {
     Vec w;        // constant used to find the planar coordinates of a point
     double d;     // constant term of the plane equation [ax + by + cz = d]
 };
+
+
+
+// A Quad is defined by an origin point and two vectors that define the plane where the quad lies.
+class Quad : public Primitive2D {
+  public:
+    Quad(const Point& _origin, const Vec& _u, const Vec& _v, const shared_ptr<Material>& _material) {
+      material = _material;
+      origin = _origin;
+      u = _u;
+      v = _v;
+      set_constants();
+    }
+
+    bool is_hit(double alpha, double beta) const {
+      return alpha >= 0 && beta >= 0 && alpha <= 1 && beta <= 1;
+    }
+
+    Point get_sample() const override {
+      return utils::sample_quad(origin, u, v);
+    }
+};
+
+
+
+// A Triangle is defined by three points in the 2D plane.
+class Triangle : public Primitive2D {
+  public:
+    Triangle(const Point& _a, const Point& _b, const Point& _c, const shared_ptr<Material>& _material) {
+      material = _material;
+      origin = _a;
+      u = _b - _a;
+      v = _c - _a;
+      set_constants();
+    }
+
+    bool is_hit(double alpha, double beta) const {
+      return alpha > 0 && beta > 0 && (alpha + beta <= 1);
+    }
+
+    Point get_sample() const override {
+      return utils::sample_triangle(origin, u, v);
+    }
+};
+
 
 } // namespace raytracer
 

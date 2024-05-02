@@ -13,12 +13,12 @@ class Light;
 // A hittable scene in 3D space.
 class Scene : public Hittable {
   public:
-    Colour ambient_light_colour = Colour(0, 0, 0); // scene background colour
-    HittableList geometries;                       // scene geometric instanced objects
-    HittableList lights;                           // light sources
+    Colour ambient_light = Colour(0, 0, 0); // scene background colour
+    HittableList geometries;                // scene geometric instanced objects
+    HittableList lights;                    // light sources
 
     Scene() = default;
-    Scene(Colour _ambient_light_colour) : ambient_light_colour(_ambient_light_colour) {}
+    Scene(Colour _ambient_light) : ambient_light(_ambient_light) {}
 
     void clear() {
       geometries.clear();

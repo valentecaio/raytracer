@@ -59,7 +59,7 @@ class Phong : public Material {
     Phong(const Colour& _albedo, double _shininess) : albedo(_albedo), shininess(_shininess) {}
 
     bool shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& result) const override {
-      Colour ambient_term = albedo * scene.ambient_light_colour;
+      Colour ambient_term = albedo * scene.ambient_light;
       Colour diffuse_term = Colour(0, 0, 0);
       Colour specular_term = Colour(0, 0, 0);
       double nsamples = 1;

@@ -17,7 +17,7 @@ void cornell_box(bool use_phong) {
   Scene scene;
 
   // light
-  scene.ambient_light_colour = Colour(0.03, 0.03, 0.03);
+  scene.ambient_light = Colour(0.03, 0.03, 0.03);
   auto mat_light = make_shared<Light>(Colour(1, 1, 1), 0.2);
   scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
 
@@ -66,7 +66,7 @@ void cornell_box(bool use_phong) {
 void quads(bool use_phong) {
   Scene scene;
 
-  scene.ambient_light_colour = Colour(0.1, 0.1, 0.1);
+  scene.ambient_light = Colour(0.1, 0.1, 0.1);
   auto material_light = make_shared<Light>(Colour(1.0, 1.0, 1.0), 1);
   scene.add(make_shared<Sphere>(Point(1, 2, 0), 0.2, material_light));
 
@@ -110,7 +110,7 @@ void quads(bool use_phong) {
 void spheres(bool use_phong) {
   Scene scene;
 
-  scene.ambient_light_colour = Colour(0.05, 0.05, 0.05);
+  scene.ambient_light = Colour(0.05, 0.05, 0.05);
   auto material_light  = make_shared<Light>(Colour(1, 1, 0), 1);
   scene.add(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_light));
 
@@ -155,7 +155,7 @@ void spheres(bool use_phong) {
 void phong() {
   Scene scene;
 
-  scene.ambient_light_colour = Colour(0.03, 0.03, 0.03);
+  scene.ambient_light = Colour(0.03, 0.03, 0.03);
   auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.4);
   scene.add(make_shared<Sphere>(Point(2.0, 1.0, -2.0), 0.1, material_light));
 

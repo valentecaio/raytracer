@@ -127,13 +127,13 @@ class Camera {
     Colour trace_ray(const Ray& r, int depth) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth <= 0)
-        return scene.ambient_light_colour;
+        return scene.ambient_light;
 
       // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
       // misses are considered as background colour
       HitRecord hitrec;
       if (!scene.hit(r, Interval(0.0001, infinity), hitrec))
-        return scene.ambient_light_colour;
+        return scene.ambient_light;
 
       // HIT !
 
@@ -154,7 +154,7 @@ class Camera {
         return attenuation * trace_ray(new_ray, depth-1);
 
       // unknown material, absorb the ray
-      return scene.ambient_light_colour;
+      return scene.ambient_light;
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j

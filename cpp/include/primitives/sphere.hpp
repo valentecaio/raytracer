@@ -4,13 +4,13 @@
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
 #include "../hittable/hit_record.hpp"
-#include "../hittable/hittable_geometry.hpp"
 #include "../material.hpp"
+#include "primitive.hpp"
 
 namespace raytracer {
 
 // A hittable sphere in 3D space.
-class Sphere : public HittableGeometry {
+class Sphere : public Primitive {
   public:
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
       : center(_center), radius(max(0.0, _radius)) { material = _material; }

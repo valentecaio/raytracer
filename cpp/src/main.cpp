@@ -4,10 +4,10 @@
 
 #include "utils/common.hpp"
 #include "hittable/scene.hpp"
-#include "geometry/sphere.hpp"
-#include "geometry/quad.hpp"
-#include "geometry/triangle.hpp"
-#include "geometry/box.hpp"
+#include "primitives/sphere.hpp"
+#include "primitives/quad.hpp"
+#include "primitives/triangle.hpp"
+#include "primitives/box.hpp"
 #include "camera.hpp"
 #include "material.hpp"
 

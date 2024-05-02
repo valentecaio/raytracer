@@ -7,17 +7,17 @@
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
 #include "../hittable/hit_record.hpp"
-#include "../hittable/hittable_geometry.hpp"
 #include "../material.hpp"
+#include "primitive.hpp"
 
 namespace raytracer {
 
 // Abstract class that represents an instance of a 2D geometric object in the scene.
-class Primitive2D : public HittableGeometry {
+class Primitive2D : public Primitive {
   public:
     virtual ~Primitive2D() = default;
 
-    // check if a point with planar coordinates (alpha, beta) is inside the primitive
+    // check if a 2D point with planar coordinates (alpha, beta) is inside the primitive
     virtual bool is_hit(double alpha, double beta) const = 0;
 
     // the intersection of a ray with a 2D primitive is the intersection of the ray with the plane

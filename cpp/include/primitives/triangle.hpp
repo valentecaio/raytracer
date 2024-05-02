@@ -1,7 +1,3 @@
-// similar to a quad, its a triangle in the 2D plane that inherits from Primitive2D
-
-// Path: cpp/include/geometry/triangle.hpp
-
 #ifndef TRIANGLE_HPP
 #define TRIANGLE_HPP
 
@@ -9,7 +5,6 @@
 #include "../utils/interval.hpp"
 #include "../utils/utils.hpp"
 #include "../hittable/hit_record.hpp"
-#include "../hittable/hittable_geometry.hpp"
 #include "../material.hpp"
 #include "primitive2d.hpp"
 
@@ -24,7 +19,6 @@ class Triangle : public Primitive2D {
       origin = _a;
       u = _b - _a;
       v = _c - _a;
-
 
       // more info in the Quad class
       Vec n = glm::cross(u, v);

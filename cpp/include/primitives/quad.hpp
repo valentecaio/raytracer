@@ -5,7 +5,6 @@
 #include "../utils/interval.hpp"
 #include "../utils/utils.hpp"
 #include "../hittable/hit_record.hpp"
-#include "../hittable/hittable_geometry.hpp"
 #include "../material.hpp"
 #include "primitive2d.hpp"
 

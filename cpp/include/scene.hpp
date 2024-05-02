@@ -7,6 +7,9 @@
 
 namespace raytracer {
 
+// forward declarations
+class Light;
+
 class Scene {
   public:
     std::vector<shared_ptr<Instance>> objects;     // scene instanced objects
@@ -21,12 +24,12 @@ class Scene {
       lights.clear();
     }
 
-    void add_object(shared_ptr<Instance> object) {
-      objects.push_back(object);
-    }
-
-    void add_light(shared_ptr<Instance> light) {
-      lights.push_back(light);
+    void add(shared_ptr<Instance> object) {
+      if (std::dynamic_pointer_cast<Light>(object->material)) {
+        lights.push_back(object);
+      } else {
+        objects.push_back(object);
+      }
     }
 
     // check if the ray intersects any object in the list

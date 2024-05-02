@@ -17,7 +17,7 @@ void cornell_box(bool use_phong) {
 
   scene.ambient_light_colour = Colour(0.03, 0.03, 0.03);
   auto material_light = make_shared<Light>(Colour(1, 1, 1), 1);
-  scene.add_light(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), material_light));
+  scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), material_light));
 
   shared_ptr<Material> red, white, green;
   if (use_phong) {
@@ -29,11 +29,11 @@ void cornell_box(bool use_phong) {
     white = (shared_ptr<Material>) make_shared<Lambertian>(Colour(.73, .73, .73));
     green = (shared_ptr<Material>) make_shared<Lambertian>(Colour(.12, .45, .15));
   }
-  scene.add_object(make_shared<Quad>(Point(555,0,0), Vec(0,555,0), Vec(0,0,555), green));
-  scene.add_object(make_shared<Quad>(Point(0,0,0), Vec(0,555,0), Vec(0,0,555), red));
-  scene.add_object(make_shared<Quad>(Point(0,0,0), Vec(555,0,0), Vec(0,0,555), white));
-  scene.add_object(make_shared<Quad>(Point(555,555,555), Vec(-555,0,0), Vec(0,0,-555), white));
-  scene.add_object(make_shared<Quad>(Point(0,0,555), Vec(555,0,0), Vec(0,555,0), white));
+  scene.add(make_shared<Quad>(Point(555,0,0), Vec(0,555,0), Vec(0,0,555), green));
+  scene.add(make_shared<Quad>(Point(0,0,0), Vec(0,555,0), Vec(0,0,555), red));
+  scene.add(make_shared<Quad>(Point(0,0,0), Vec(555,0,0), Vec(0,0,555), white));
+  scene.add(make_shared<Quad>(Point(555,555,555), Vec(-555,0,0), Vec(0,0,-555), white));
+  scene.add(make_shared<Quad>(Point(0,0,555), Vec(555,0,0), Vec(0,555,0), white));
 
 
   /////////////////////
@@ -58,7 +58,7 @@ void quads(bool use_phong) {
 
   scene.ambient_light_colour = Colour(0.1, 0.1, 0.1);
   auto material_light = make_shared<Light>(Colour(1.0, 1.0, 1.0), 1);
-  scene.add_light(make_shared<Sphere>(Point(1, 2, 0), 0.2, material_light));
+  scene.add(make_shared<Sphere>(Point(1, 2, 0), 0.2, material_light));
 
   shared_ptr<Material> left_red, back_green, upper_orange, lower_cyan;
   if (use_phong) {
@@ -74,11 +74,11 @@ void quads(bool use_phong) {
   }
   auto blue_metal = make_shared<Metal>(Colour(0.4, 0.4, 1.0), 0.03);
 
-  scene.add_object(make_shared<Quad>(Point(-3,-2, 5), Vec(0, 0,-4), Vec(0, 4, 0), left_red));
-  scene.add_object(make_shared<Quad>(Point(-2,-2, 0), Vec(4, 0, 0), Vec(0, 4, 0), back_green));
-  scene.add_object(make_shared<Quad>(Point(-2, 3, 1), Vec(4, 0, 0), Vec(0, 0, 4), upper_orange));
-  scene.add_object(make_shared<Quad>(Point(-2,-3, 5), Vec(4, 0, 0), Vec(0, 0,-4), lower_cyan));
-  scene.add_object(make_shared<Quad>(Point( 3,-2, 1), Vec(0, 0, 4), Vec(0, 4, 0), blue_metal));
+  scene.add(make_shared<Quad>(Point(-3,-2, 5), Vec(0, 0,-4), Vec(0, 4, 0), left_red));
+  scene.add(make_shared<Quad>(Point(-2,-2, 0), Vec(4, 0, 0), Vec(0, 4, 0), back_green));
+  scene.add(make_shared<Quad>(Point(-2, 3, 1), Vec(4, 0, 0), Vec(0, 0, 4), upper_orange));
+  scene.add(make_shared<Quad>(Point(-2,-3, 5), Vec(4, 0, 0), Vec(0, 0,-4), lower_cyan));
+  scene.add(make_shared<Quad>(Point( 3,-2, 1), Vec(0, 0, 4), Vec(0, 4, 0), blue_metal));
 
   /////////////////////
 
@@ -102,7 +102,7 @@ void spheres(bool use_phong) {
 
   scene.ambient_light_colour = Colour(0.05, 0.05, 0.05);
   auto material_light  = make_shared<Light>(Colour(1, 1, 0), 1);
-  scene.add_light(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_light));
+  scene.add(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_light));
 
   shared_ptr<Material> ground, center;
   if (use_phong) {
@@ -116,10 +116,10 @@ void spheres(bool use_phong) {
   auto metal2 = make_shared<Metal>(Colour(0.2, 0.8, 0.2), 0.2);
   auto glass  = make_shared<Dielectric>(1.5);
   auto bubble = make_shared<Dielectric>(1.0/1.5);
-  scene.add_object(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, ground));
-  scene.add_object(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, center));
-  scene.add_object(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, metal1));
-  scene.add_object(make_shared<Sphere>(Point( 0.3,   -0.1, -0.7), 0.2, glass));
+  scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, ground));
+  scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, center));
+  scene.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, metal1));
+  scene.add(make_shared<Sphere>(Point( 0.3,   -0.1, -0.7), 0.2, glass));
   // scene.add(make_shared<Sphere>(Point( 0.3,  -0.15, -0.7), 0.15, bubble));
 
 
@@ -147,15 +147,15 @@ void phong() {
 
   scene.ambient_light_colour = Colour(0.03, 0.03, 0.03);
   auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.4);
-  scene.add_light(make_shared<Sphere>(Point(2.0, 1.0, -2.0), 0.1, material_light));
+  scene.add(make_shared<Sphere>(Point(2.0, 1.0, -2.0), 0.1, material_light));
 
   auto material_ground = make_shared<Phong>(Colour(0.8, 0.0, 0.8), 100);
   auto material_center = make_shared<Phong>(Colour(0.8, 0.8, 0.0), 3);
   // auto material_center = make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
   auto material_left   = make_shared<Phong>(Colour(0.0, 0.8, 0.8), 10);
-  scene.add_object(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
-  scene.add_object(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, material_center));
-  scene.add_object(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, material_left));
+  scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
+  scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, material_center));
+  scene.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, material_left));
 
 
   /////////////////////
@@ -176,7 +176,7 @@ void phong() {
 }
 
 int main() {
-  switch (6) {
+  switch (0) {
     case 0: phong(); break;
     case 1: cornell_box(false); break;
     case 2: cornell_box(true); break;

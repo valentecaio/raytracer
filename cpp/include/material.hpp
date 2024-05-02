@@ -5,9 +5,11 @@
 #include "ray.hpp"
 #include "utils.hpp"
 #include "vec.hpp"
+#include "scene.hpp"
 
 namespace raytracer {
 
+// forward declarations
 class HitRecord;
 
 class Material {
@@ -94,6 +96,31 @@ class Phong : public Material {
     Colour albedo;
     double shininess;
 };
+
+/*
+class PhongMetal : public Material {
+  public:
+    PhongMetal(const Colour& _albedo, double _shininess, double _fuzz)
+      : albedo(_albedo), shininess(_shininess), fuzz(min(_fuzz, 1.0)) {}
+
+    bool shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& result) const override {
+      // R = Schlick's approximation for reflectance
+      // c = (1-R) * Phong shading
+
+      // Vec reflected = glm::reflect(r_in.direction(), hitrec.normal);
+      // reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
+      // ray = Ray(hitrec.p, reflected);
+
+      // c += R * trace_ray(ray);
+    }
+
+  private:
+    Colour albedo;
+    double shininess;
+    double fuzz;
+  };
+}
+*/
 
 // A Diffuse material that bounces rays in random directions
 class Lambertian : public Material {

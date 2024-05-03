@@ -3,8 +3,25 @@
 
 #include "common.hpp"
 
+
 // The utils namespace contains utility functions that are used throughout the raytracer.
 namespace raytracer::utils {
+
+
+// MATH UTILS //
+
+// returns the min of a list of values
+template<typename T>
+T min(std::initializer_list<T> list) {
+  return *std::min_element(list.begin(), list.end());
+}
+
+// returns the max of a list of values
+template<typename T>
+T max(std::initializer_list<T> list) {
+  return *std::max_element(list.begin(), list.end());
+}
+
 
 
 // RANDOM GENERATION UTILS //
@@ -46,6 +63,7 @@ inline Point sample_disk(double r) {
   return Point(cos(phi), sin(phi), 0);}
 
 
+
 // TEST UTILS //
 
 inline void clock(const std::function<void()>& func) {
@@ -56,6 +74,7 @@ inline void clock(const std::function<void()>& func) {
   auto duration = std::chrono::duration<double>(end-start).count();
   std::clog << "\nExecution time: " << duration << " seconds" << std::endl;
 }
+
 
 
 // IMAGE UTILS //
@@ -80,6 +99,7 @@ void write_image(int image_width, int image_height, std::vector<std::vector<Colo
     }
   }
 }
+
 
 } // namespace raytracer::utils
 

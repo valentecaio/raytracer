@@ -2,16 +2,23 @@
 #define COMMON_H
 
 /* INCLUDES */
-#include <iostream>    // std::cout, std::clog, std::flush
-#include <memory>      // shared_ptr, make_shared, shared_ptr_cast
-#include <vector>
-#include <cstdlib>     // rand
-#include <cmath>       // sqrt, fabs
-#include <limits>      // infinity
-#include <algorithm>   // max, min
-#include <glm.hpp>     // glm::dvec3, glm::dot, glm::normalize
-#include <functional>  // std::function
-#include <chrono>      // std::chrono::high_resolution_clock
+#include <iostream>         // std::cout, std::clog, std::flush
+#include <memory>           // shared_ptr, make_shared, shared_ptr_cast
+#include <vector>           // std::vector
+#include <cstdlib>          // rand
+#include <cmath>            // sqrt, fabs
+#include <limits>           // infinity
+#include <algorithm>        // max, min
+#include <functional>       // std::function
+#include <chrono>           // std::chrono::high_resolution_clock
+#include <initializer_list> // std::initializer_list
+#include <fstream>          // std::ifstream
+#include <sstream>          // std::stringstream
+
+// includes from lib/
+#include <glm.hpp>            // algebra
+// #include <tiny_obj_loader.h>  // object loading
+
 
 
 /* USINGS */

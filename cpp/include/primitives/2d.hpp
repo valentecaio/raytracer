@@ -41,6 +41,7 @@ class Primitive2D : public Primitive {
       double beta  = glm::dot(w, glm::cross(u, op));
 
       // intersection point outside of primitive boundaries
+      // this is the only part where the derived primitives differ
       if(!is_hit(alpha, beta))
         return false;
 
@@ -52,27 +53,30 @@ class Primitive2D : public Primitive {
       return true;
     }
 
-  // should be called by the constructor of the derived class
-  // after setting the origin, u and v fields
-  void set_constants() {
-    // the normal is ortogonal to the two vectors that define the quad
-    Vec n = glm::cross(u, v);
-    normal = glm::normalize(n);
+    // should be called by the constructor of the derived class
+    // after setting the origin, u and v fields
+    void set_constants() {
+      // the normal is ortogonal to the two vectors that define the quad
+      Vec n = glm::cross(u, v);
+      normal = glm::normalize(n);
 
-    // d is the constant term of the plane equation [ax + by + cz = d]
-    // where (a, b, c) is the normal vector and (x, y, z) is the origin point
-    d = glm::dot(normal, origin);
+      // d is the constant term of the plane equation [ax + by + cz = d]
+      // where (a, b, c) is the normal vector and (x, y, z) is the origin point
+      d = glm::dot(normal, origin);
 
-    // w is the constant used to find the planar coordinates alpha & beta
-    // of a point P in the uv plane (P = origin + u*alpha + v*beta)
-    w = n / glm::dot(n, n);
-  }
+      // w is the constant used to find the planar coordinates alpha & beta
+      // of a point P in the uv plane (P = origin + u*alpha + v*beta)
+      w = n / glm::dot(n, n);
+    }
 
   // the following members must be defined at the constructor of the derived class
   protected:
     Point origin; // origin point of the primitive, in the plane
     Vec normal;   // normal vector to the plane that contains the primitive, normalized
     Vec u, v;     // two vectors that define the plane where the primitive lies
+
+  // the following members are calculated by the set_constants method
+  private:
     Vec w;        // constant used to find the planar coordinates of a point
     double d;     // constant term of the plane equation [ax + by + cz = d]
 };
@@ -104,11 +108,14 @@ class Quad : public Primitive2D {
 // A Triangle is defined by three points in the 2D plane.
 class Triangle : public Primitive2D {
   public:
-    Triangle(const Point& _a, const Point& _b, const Point& _c, const shared_ptr<Material>& _material) {
+    Point a, b, c; // unused but useful for debug
+
+    Triangle(const Point& _a, const Point& _b, const Point& _c, const shared_ptr<Material>& _material)
+      : a(_a), b(_b), c(_c) {
       material = _material;
-      origin = _a;
-      u = _b - _a;
-      v = _c - _a;
+      origin = a;
+      u = b - a;
+      v = c - a;
       set_constants();
     }
 

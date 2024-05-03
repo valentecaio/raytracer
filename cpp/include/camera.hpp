@@ -22,7 +22,7 @@ class Camera {
     Vec vup = Vec(0, 1, 0);         // camera up vector (view up)
 
     double defocus_angle = 0.0;     // angle of the cone with apex at the viewpoint and base at the camera center (0 = no defocus)
-    double focus_dist = 10;         // distance from camera to focus plane
+    double focus_dist = 1;          // distance from camera to focus plane
 
 
     // constructors and destructors

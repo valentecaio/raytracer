@@ -3,12 +3,48 @@
 #include "utils/common.hpp"
 #include "hittable/scene.hpp"
 #include "primitives/2d.hpp"
-#include "primitives/sphere.hpp"
 #include "primitives/box.hpp"
+#include "primitives/mesh.hpp"
+#include "primitives/sphere.hpp"
 #include "camera.hpp"
 #include "material.hpp"
 
 using namespace raytracer;
+
+
+// a scene with Phong materials, Spheres and a Point Light
+void phong() {
+  Scene scene;
+
+  scene.ambient_light = Colour(0.03, 0.03, 0.03);
+  auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.4);
+  scene.add(make_shared<Sphere>(Point(2.0, 1.0, -2.0), 0.1, material_light));
+
+  auto material_ground = make_shared<Phong>(Colour(0.8, 0.0, 0.8), 100);
+  auto material_center = make_shared<Phong>(Colour(0.8, 0.8, 0.0), 3);
+  // auto material_center = make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
+  auto material_left   = make_shared<Phong>(Colour(0.0, 0.8, 0.8), 10);
+  scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
+  scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, material_center));
+  scene.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, material_left));
+
+
+  /////////////////////
+
+  Camera camera(scene);
+
+  camera.aspect_ratio = 16.0 / 9.0;
+  camera.image_width = 800;
+  camera.samples_per_pixel = 20;
+  camera.max_depth = 15;
+  camera.vfov = 90.0;
+  camera.look_from = Point(0,0,0);
+  camera.look_at = Point(0,0,-1);
+  camera.defocus_angle = 0;
+  camera.focus_dist = 1;
+
+  utils::clock([&camera]() { camera.render(); });
+}
 
 
 void cornell_box(bool use_phong) {
@@ -50,7 +86,7 @@ void cornell_box(bool use_phong) {
 
   camera.aspect_ratio = 1.0;
   camera.image_width = 600;
-  camera.samples_per_pixel = 10;
+  camera.samples_per_pixel = 2;
   camera.max_depth = 15;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
@@ -94,7 +130,7 @@ void quads(bool use_phong) {
 
   camera.aspect_ratio = 1.0;
   camera.image_width = 600;
-  camera.samples_per_pixel = 30;
+  camera.samples_per_pixel = 10;
   camera.max_depth = 15;
   camera.vfov = 80;
   camera.look_from = Point(0,0,9);
@@ -104,7 +140,7 @@ void quads(bool use_phong) {
 }
 
 
-// a scene with Spheres and a Point Light
+// a scene with Spheres and a point Light
 void spheres(bool use_phong) {
   Scene scene;
 
@@ -149,43 +185,42 @@ void spheres(bool use_phong) {
 }
 
 
-// a scene with Phong materials, Spheres and a Point Light
-void phong() {
+// a scene with a mesh bunny and a point light
+void bunny() {
   Scene scene;
 
-  scene.ambient_light = Colour(0.03, 0.03, 0.03);
-  auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.4);
-  scene.add(make_shared<Sphere>(Point(2.0, 1.0, -2.0), 0.1, material_light));
+  // light
+  scene.ambient_light = Colour(0.01, 0.01, 0.01);
+  auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.2);
+  scene.add(make_shared<Sphere>(Point(0.2, 0.3, 0), 0.01, material_light));
 
-  auto material_ground = make_shared<Phong>(Colour(0.8, 0.0, 0.8), 100);
-  auto material_center = make_shared<Phong>(Colour(0.8, 0.8, 0.0), 3);
-  // auto material_center = make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
-  auto material_left   = make_shared<Phong>(Colour(0.0, 0.8, 0.8), 10);
-  scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
-  scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, material_center));
-  scene.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, material_left));
+  // bunny
+  auto bunny_material = make_shared<Phong>(Colour(0.5, 0.45, 0.43), 500);
+  auto bunny = make_shared<raytracer::Mesh>("assets/bunny.obj", bunny_material);
+  scene.add(bunny);
 
+  // ground
+  auto ground = make_shared<Phong>(Colour(0.2, 0.7, 0.0), 10);
+  scene.add(make_shared<Sphere>(Point(0, -98, -20), 100, ground));
 
   /////////////////////
 
   Camera camera(scene);
 
-  camera.aspect_ratio = 16.0 / 9.0;
-  camera.image_width = 800;
-  camera.samples_per_pixel = 20;
-  camera.max_depth = 15;
-  camera.vfov = 90.0;
-  camera.look_from = Point(0,0,0);
-  camera.look_at = Point(0,0,-1);
-  camera.defocus_angle = 0;
-  camera.focus_dist = 1;
+  camera.aspect_ratio = 16.0/9.0;
+  camera.image_width = 400;
+  camera.samples_per_pixel = 2;
+  camera.max_depth = 5;
+  camera.vfov = 50.0;
+  camera.look_from = Point(0, 0, 0.3);
+  camera.look_at = Point(0, 0.6, -1);
 
   utils::clock([&camera]() { camera.render(); });
 }
 
 int main() {
   // false to use Lambertian, true to use Phong
-  switch (4) {
+  switch (7) {
     case 0: phong(); break;
     case 1: cornell_box(false); break;
     case 2: cornell_box(true); break;
@@ -193,5 +228,6 @@ int main() {
     case 4: quads(true); break;
     case 5: spheres(false); break;
     case 6: spheres(true); break;
+    case 7: bunny(); break;
   }
 }

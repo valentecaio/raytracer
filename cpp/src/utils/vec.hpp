@@ -6,7 +6,7 @@
 
 using namespace raytracer;
 
-// The Vec namespace contains utility functions for vectors.
+// The vec namespace contains utility functions for vectors.
 namespace raytracer::vec {
 
 // returns a random Vec in [0,1)^3.
@@ -36,12 +36,6 @@ inline Vec random_unit() {
 inline Vec random_unit_hemisphere(const Vec& normal) {
   Vec vec = random_unit();
   return (glm::dot(vec, normal) > 0.0) ? vec : -vec;
-}
-
-// returns a random Vec inside the unit disk (z=0)
-inline Vec random_in_unit_disk() {
-  double phi = 2*M_PI*utils::random(); // phi = random in [0, 2pi)
-  return Vec(cos(phi), sin(phi), 0);
 }
 
 // true if the vector is close to zero in all dimensions.

@@ -14,14 +14,14 @@ class Light;
 class Scene : public Hittable {
   public:
     Colour ambient_light = Colour(0, 0, 0); // scene background colour
-    HittableList geometries;                // scene geometric instanced objects
+    HittableList primitives;                // scene geometric instanced objects
     HittableList lights;                    // light sources
 
     Scene() = default;
     Scene(Colour _ambient_light) : ambient_light(_ambient_light) {}
 
     void clear() {
-      geometries.clear();
+      primitives.clear();
       lights.clear();
     }
 
@@ -29,7 +29,7 @@ class Scene : public Hittable {
       if (std::dynamic_pointer_cast<Light>(object->material)) {
         lights.add(object);
       } else {
-        geometries.add(object);
+        primitives.add(object);
       }
     }
 
@@ -37,7 +37,7 @@ class Scene : public Hittable {
     bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const {
       HitRecord hitrec1, hitrec2;
 
-      bool hit_object = geometries.hit(r, ray_t, hitrec1);
+      bool hit_object = primitives.hit(r, ray_t, hitrec1);
       bool hit_light = lights.hit(r, ray_t, hitrec2);
 
       if (hit_light && hit_object)

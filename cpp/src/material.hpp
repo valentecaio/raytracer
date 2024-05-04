@@ -19,20 +19,10 @@ class Material {
     Material() = default;
     virtual ~Material() = default;
 
-    // returns true if the ray is bounced, false otherwise
-    // attenuation is the colour absorbed by the material
-    // bounced is the new ray after bouncing
-    virtual bool bounce(const Ray& r_in, const HitRecord& hitrec, Colour& attenuation, Ray& bounced) const {
-      return false;
-    }
-
-    // returns true if the material can be shaded, false otherwise
-    virtual bool shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& result) const {
-      return false;
-    }
-
-    // returns true if the material can emit light, false otherwise
-    virtual bool emit(Colour& emitted) const {
+    // returns true if the a new ray should be cast, false otherwise
+    // out_colour is the colour absorbed by the material
+    // out_ray is the new ray to cast, only valid if the return value is true
+    virtual bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const {
       return false;
     }
 };
@@ -41,14 +31,14 @@ class Material {
 // A material that emits light
 class Light : public Material {
   public:
-    Colour colour;
-    double intensity;
+    Colour colour;    // fixed colour of the light source
+    double intensity; // used in the shading equation
 
     Light(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
-    bool emit(Colour& emitted) const override {
-      emitted = colour;
-      return true;
+    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+      out_colour = colour;
+      return false;
     }
 };
 
@@ -58,7 +48,13 @@ class Phong : public Material {
   public:
     Phong(const Colour& _albedo, double _shininess) : albedo(_albedo), shininess(_shininess) {}
 
-    bool shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& result) const override {
+    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+      out_colour = shade(r_in, hitrec, scene);
+      return false;
+    }
+
+  private:
+    Colour shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene) const {
       Colour ambient_term = albedo * scene.ambient_light;
       Colour diffuse_term = Colour(0, 0, 0);
       Colour specular_term = Colour(0, 0, 0);
@@ -89,8 +85,7 @@ class Phong : public Material {
           }
         }
       }
-      result = ambient_term + (diffuse_term/nsamples) + (specular_term/nsamples);
-      return true;
+      return ambient_term + (diffuse_term/nsamples) + (specular_term/nsamples);
     }
 
   private:
@@ -104,15 +99,15 @@ class Lambertian : public Material {
   public:
     Lambertian(const Colour& _albedo) : albedo(_albedo) {}
 
-    bool bounce(const Ray& r_in, const HitRecord& hitrec, Colour& attenuation, Ray& bounced) const override {
-      attenuation = albedo;
+    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+      out_colour = albedo;
+
+      // bounce the ray in a random direction
       Vec bounce_direction = hitrec.normal + vec::random_unit();
-
-      // catch degenerate direction
-      if (vec::is_near_zero(bounce_direction))
+      if (vec::is_near_zero(bounce_direction)) // degenerate direction
         bounce_direction = hitrec.normal;
+      out_ray = Ray(hitrec.p, bounce_direction);
 
-      bounced = Ray(hitrec.p, bounce_direction);
       return true;
     }
 
@@ -122,16 +117,21 @@ class Lambertian : public Material {
 
 
 // A Metal / Mirror material that reflects rays
+// if fuzz is zero, the reflection is perfect (Mirror)
 class Metal : public Material {
   public:
     Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(std::min(_fuzz, 1.0)) {}
 
-    bool bounce(const Ray& r_in, const HitRecord& hitrec, Colour& attenuation, Ray& bounced) const override {
-      attenuation = albedo;
+    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+      out_colour = albedo;
+
+      // bounce the ray in a fuzzy direction
       Vec reflected = glm::reflect(r_in.direction(), hitrec.normal);
       reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
-      bounced = Ray(hitrec.p, reflected);
-      return glm::dot(bounced.direction(), hitrec.normal) > 0; // absorb rays that bounce below the surface
+      out_ray = Ray(hitrec.p, reflected);
+
+      // absorb rays that bounce below the surface
+      return glm::dot(out_ray.direction(), hitrec.normal) > 0;
     }
 
   private:
@@ -145,8 +145,9 @@ class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
 
-    bool bounce(const Ray& r_in, const HitRecord& hitrec, Colour& attenuation, Ray& bounced) const override {
-      attenuation = Colour(1, 1, 1); // glass absorbs nothing
+    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+      // dieletric material absorbs nothing
+      out_colour = Colour(1, 1, 1);
 
       double ri = hitrec.front_face ? (1.0/refraction_index) : refraction_index;
       double cos_theta = std::min(glm::dot(-r_in.direction(), hitrec.normal), 1.0);
@@ -158,14 +159,14 @@ class Dielectric : public Material {
         direction = glm::reflect(r_in.direction(), hitrec.normal);
       else
         direction = glm::refract(r_in.direction(), hitrec.normal, ri);
+      out_ray = Ray(hitrec.p, direction);
 
-      bounced = Ray(hitrec.p, direction);
       return true;
     }
 
   private:
     // refractive index in vacuum or air,
-    // or ratio of the material's refractive index over the refractive index of the enclosing media
+    // or ratio of the material's refractive index over the refractive index of the enclosing medium
     double refraction_index;
 
     // Schlick's approximation for reflectance

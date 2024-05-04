@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+
 /* INCLUDES */
 #include <iostream>         // std::cout, std::clog, std::flush
 #include <memory>           // shared_ptr, make_shared, shared_ptr_cast
@@ -18,7 +19,6 @@
 // includes from lib/
 #include <glm.hpp>            // algebra
 // #include <tiny_obj_loader.h>  // object loading
-
 
 
 /* USINGS */

@@ -225,7 +225,7 @@ void bunny() {
 
 int main() {
   // false to use Lambertian, true to use Phong
-  switch (7) {
+  switch (0) {
     case 0: phong(); break;
     case 1: cornell_box(false); break;
     case 2: cornell_box(true); break;

@@ -28,10 +28,13 @@ class Camera {
     // constructors and destructors
     Camera() = default;
     Camera(Scene scene) : scene(scene) {}
+    ~Camera() = default;
 
     // render the image row by row, from top to bottom
     void render() {
       initialize();
+
+      // experimental parallelization: uncomment one of the pragma directives to enable
 
       // OpenACC for GPU parallelization
       // auto pixels = std::vector<std::vector<Colour>>(image_height, std::vector<Colour>(image_width));
@@ -49,7 +52,7 @@ class Camera {
         for (int i = 0; i < image_width; ++i) {
           auto pixel_colour = Colour(0, 0, 0);
           for (int sample = 0; sample < samples_per_pixel; ++sample) {
-            Ray r = get_ray(i, j);
+            Ray r = ray_sample(i, j);
             pixel_colour += trace_ray(r, max_depth);
           }
           pixels[j][i] = pixel_colour/static_cast<double>(samples_per_pixel);
@@ -124,7 +127,7 @@ class Camera {
     }
 
     // returns the colour of the ray after it hits the scene
-    Colour trace_ray(const Ray& r, int depth) const {
+    Colour trace_ray(const Ray& r_in, int depth) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth <= 0)
         return scene.ambient_light;
@@ -132,49 +135,37 @@ class Camera {
       // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
       // misses are considered as background colour
       HitRecord hitrec;
-      if (!scene.hit(r, Interval(0.0001, infinity), hitrec))
+      if (!scene.hit(r_in, Interval(0.0001, infinity), hitrec))
         return scene.ambient_light;
 
       // HIT !
-
-      // check if hit object is a light -> return its emission colour
-      Colour emitted;
-      if (hitrec.object->material->emit(emitted))
-        return emitted;
-
-      // phong shading
-      Colour shading;
-      if (hitrec.object->material->shade(r, hitrec, scene, shading))
-        return shading;
-
-      // (recursively) bounce ray at the hit point, if the material allows it
-      Ray new_ray;
-      Colour attenuation;
-      if (hitrec.object->material->bounce(r, hitrec, attenuation, new_ray))
-        return attenuation * trace_ray(new_ray, depth-1);
-
-      // unknown material, absorb the ray
-      return scene.ambient_light;
+      // if the material fully absorbed the ray, return the material evaluated colour
+      // otherwise, the material evaluation will return a new ray to trace
+      Colour c;
+      Ray r_out;
+      if (hitrec.object->material->evaluate(r_in, hitrec, scene, c, r_out))
+        return c * trace_ray(r_out, depth-1);
+      return c;
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j
-    Ray get_ray(int i, int j) const {
+    Ray ray_sample(int i, int j) const {
+      // pixel position
       Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);
-      Point pixel_sample = utils::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
+      Point pixel_pos = utils::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
 
-      Point ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
-      Vec ray_direction = pixel_sample - ray_origin;
+      // ray center
+      Point ray_origin = center;
+      if (defocus_angle > 0) {
+        // if defocus is enabled, the ray origin is a random point in the camera defocus disk
+        Point p = utils::sample_disk(1);
+        ray_origin += (p.x * defocus_u) + (p.y * defocus_v);
+      }
 
+      // ray direction
+      Vec ray_direction = pixel_pos - ray_origin;
       return Ray(ray_origin, ray_direction);
     }
-
-    // returns a random point in the camera defocus disk.
-    Point defocus_disk_sample() const {
-      // TODO: replace by utils::sample_disk
-      Vec p = vec::random_in_unit_disk();
-      return center + (p.x * defocus_u) + (p.y * defocus_v);
-    }
-
 };
 
 } // namespace raytracer

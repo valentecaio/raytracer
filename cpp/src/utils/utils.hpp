@@ -10,15 +10,15 @@ namespace raytracer::utils {
 
 // MATH UTILS //
 
-// returns the min of a list of values
+// returns the min of a list of values, example: min({1, 2, 3, 4}) -> 1
 template<typename T>
-T min(std::initializer_list<T> list) {
+inline T min(std::initializer_list<T> list) {
   return *std::min_element(list.begin(), list.end());
 }
 
-// returns the max of a list of values
+// returns the max of a list of values, example: max({1, 2, 3, 4}) -> 4
 template<typename T>
-T max(std::initializer_list<T> list) {
+inline T max(std::initializer_list<T> list) {
   return *std::max_element(list.begin(), list.end());
 }
 
@@ -57,10 +57,11 @@ inline Point sample_triangle(Point a, Vec u, Vec v) {
   return a + alpha*u + beta*v;
 }
 
-// TODO: TEST //
+// returns a random sample in the disk of radius r at z=0
 inline Point sample_disk(double r) {
   double phi = 2 * M_PI * random();   // phi = random in [0, 2pi)
-  return Point(cos(phi), sin(phi), 0);}
+  return Point(r*cos(phi), r*sin(phi), 0);
+}
 
 
 

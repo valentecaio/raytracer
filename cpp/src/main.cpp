@@ -12,21 +12,26 @@
 using namespace raytracer;
 
 
-// a scene with Phong materials, Spheres and a Point Light
+// a scene with Phong materials, Spheres, a mirror (Metal material) and a point Light
 void phong() {
   Scene scene;
 
+  // light
   scene.ambient_light = Colour(0.03, 0.03, 0.03);
   auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.4);
-  scene.add(make_shared<Sphere>(Point(2.0, 1.0, -2.0), 0.1, material_light));
+  scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
+  // spheres
   auto material_ground = make_shared<Phong>(Colour(0.8, 0.0, 0.8), 100);
-  auto material_center = make_shared<Phong>(Colour(0.8, 0.8, 0.0), 3);
-  // auto material_center = make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
-  auto material_left   = make_shared<Phong>(Colour(0.0, 0.8, 0.8), 10);
+  auto material_right  = make_shared<Phong>(Colour(0.8, 0.8, 0.0), 100);
+  auto material_center = make_shared<Phong>(Colour(0.0, 0.8, 0.8), 2);
   scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
-  scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, material_center));
-  scene.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, material_left));
+  scene.add(make_shared<Sphere>(Point( 1.0,    0.0, -2.2), 0.5, material_right));
+  scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.0), 0.5, material_center));
+
+  // mirror
+  auto material_mirror = make_shared<Metal>(Colour(0.4, 0.4, 0.4), 0.0);
+  scene.add(make_shared<Quad>(Point(-4, -1, -3), Vec(2, 0, -2), Vec(0, 2, 0), material_mirror));
 
 
   /////////////////////
@@ -34,9 +39,9 @@ void phong() {
   Camera camera(scene);
 
   camera.aspect_ratio = 16.0 / 9.0;
-  camera.image_width = 800;
+  camera.image_width = 600;
   camera.samples_per_pixel = 20;
-  camera.max_depth = 15;
+  camera.max_depth = 5;
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
   camera.look_at = Point(0,0,-1);
@@ -185,7 +190,7 @@ void spheres(bool use_phong) {
 }
 
 
-// a scene with a mesh bunny and a point light
+// a scene with a Mesh bunny and a point Light
 void bunny() {
   Scene scene;
 

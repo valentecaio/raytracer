@@ -81,7 +81,7 @@ inline void clock(const std::function<void()>& func) {
 
 // convert linear RGB to gamma corrected RGB
 inline double linear_to_gamma(double linear_component) {
-  return (linear_component > 0) ? sqrt(linear_component) : 0;
+  return (linear_component > 0) ? std::sqrt(linear_component) : 0;
 }
 
 void write_pixel(std::ostream &out, Colour pixel_colour) {

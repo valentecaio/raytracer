@@ -19,8 +19,8 @@ class Box : public Primitive {
     ~Box() = default;
 
     Box(const Point& _a, const Point& _b, shared_ptr<Material> _mat) {
-      pmin = Point(min(_a.x, _b.x), min(_a.y, _b.y), min(_a.z, _b.z));
-      pmax = Point(max(_a.x, _b.x), max(_a.y, _b.y), max(_a.z, _b.z));
+      pmin = Point(std::min(_a.x, _b.x), std::min(_a.y, _b.y), std::min(_a.z, _b.z));
+      pmax = Point(std::max(_a.x, _b.x), std::max(_a.y, _b.y), std::max(_a.z, _b.z));
 
       auto dx = Vec(pmax.x - pmin.x, 0, 0);
       auto dy = Vec(0, pmax.y - pmin.y, 0);

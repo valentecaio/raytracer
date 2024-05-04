@@ -13,7 +13,7 @@ namespace raytracer {
 class Sphere : public Primitive {
   public:
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
-      : center(_center), radius(max(0.0, _radius)) { material = _material; }
+      : center(_center), radius(std::max(0.0, _radius)) { material = _material; }
 
     bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
@@ -31,7 +31,7 @@ class Sphere : public Primitive {
         return false;
 
       // find the nearest root that lies in the acceptable range.
-      double sqrtd = sqrt(delta);
+      double sqrtd = std::sqrt(delta);
       double root = (-half_b - sqrtd) / a; // try nearest root
       if (!ray_t.contains(root)) {
         root = (-half_b + sqrtd) / a;      // try second root

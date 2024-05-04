@@ -23,7 +23,7 @@ inline Vec random(double min, double max) {
 inline Vec random_unit() {
   double z = 1 - 2*utils::random();    // z = random in [-1,1]
 
-  double r = sqrt(1 - z*z);
+  double r = std::sqrt(1 - z*z);
   double phi = 2*M_PI*utils::random(); // phi = random in [0, 2pi)
 
   double x = r*cos(phi);
@@ -46,7 +46,7 @@ inline Vec random_in_unit_disk() {
 
 // true if the vector is close to zero in all dimensions.
 inline bool is_near_zero(const Vec& v) {
-  return (fabs(v.x) < NEAR_ZERO) && (fabs(v.y) < NEAR_ZERO) && (fabs(v.z) < NEAR_ZERO);
+  return (std::fabs(v.x) < NEAR_ZERO) && (std::fabs(v.y) < NEAR_ZERO) && (std::fabs(v.z) < NEAR_ZERO);
 }
 
 inline double squared_length(const Vec& v) {
@@ -61,9 +61,9 @@ inline Vec reflect(const Vec& v, const Vec& n) {
 
 // returns the refraction of a vector uv through a normal n.
 inline Vec refract(const Vec& uv, const Vec& n, double etai_over_etat) {
-  double cos_theta = min(dot(-uv, n), 1.0);
+  double cos_theta = std::min(dot(-uv, n), 1.0);
   Vec r_out_perp =  etai_over_etat * (uv + cos_theta*n);
-  Vec r_out_parallel = -sqrt(fabs(1.0 - squared_length(r_out_perp))) * n;
+  Vec r_out_parallel = -std::sqrt(std::fabs(1.0 - squared_length(r_out_perp))) * n;
   return r_out_perp + r_out_parallel;
 }
 

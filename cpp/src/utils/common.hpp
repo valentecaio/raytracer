@@ -24,10 +24,6 @@
 /* USINGS */
 using std::shared_ptr;
 using std::make_shared;
-using std::sqrt;
-using std::min;
-using std::max;
-using std::fabs;
 
 
 namespace raytracer {

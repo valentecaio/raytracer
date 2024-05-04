@@ -76,7 +76,7 @@ class Camera {
       if (initialized) return;
 
       // the image has a locked aspect ratio, but the height has to be at least 1
-      image_height = max(static_cast<int>(image_width / aspect_ratio), 1);
+      image_height = std::max(static_cast<int>(image_width / aspect_ratio), 1);
 
       /* CAMERA */
 

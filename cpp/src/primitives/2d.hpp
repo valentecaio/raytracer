@@ -24,7 +24,7 @@ class Primitive2D : public Primitive {
       double denom = glm::dot(normal, r.direction());
 
       // ray and plane are parallels -> no intersection
-      if (fabs(denom) < NEAR_ZERO)
+      if (std::fabs(denom) < NEAR_ZERO)
         return false;
 
       // calculate the intersection point, t = (d - n*o) / n*d

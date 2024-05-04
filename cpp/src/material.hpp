@@ -79,12 +79,12 @@ class Phong : public Material {
             auto light_mat = std::dynamic_pointer_cast<Light>(light->material);
 
             // diffuse
-            double NdotL = max(glm::dot(hitrec.normal, light_dir), 0.0);
+            double NdotL = std::max(glm::dot(hitrec.normal, light_dir), 0.0);
             diffuse_term += albedo * light_mat->colour * light_mat->intensity * NdotL;
 
             // specular
             Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hitrec.normal));
-            double RdotV = std::pow(max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
+            double RdotV = std::pow(std::max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
             specular_term += light_mat->colour * light_mat->intensity * RdotV;
           }
         }
@@ -124,7 +124,7 @@ class Lambertian : public Material {
 // A Metal / Mirror material that reflects rays
 class Metal : public Material {
   public:
-    Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(min(_fuzz, 1.0)) {}
+    Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(std::min(_fuzz, 1.0)) {}
 
     bool bounce(const Ray& r_in, const HitRecord& hitrec, Colour& attenuation, Ray& bounced) const override {
       attenuation = albedo;
@@ -149,8 +149,8 @@ class Dielectric : public Material {
       attenuation = Colour(1, 1, 1); // glass absorbs nothing
 
       double ri = hitrec.front_face ? (1.0/refraction_index) : refraction_index;
-      double cos_theta = min(glm::dot(-r_in.direction(), hitrec.normal), 1.0);
-      double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+      double cos_theta = std::min(glm::dot(-r_in.direction(), hitrec.normal), 1.0);
+      double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
       bool can_refract = ri * sin_theta <= 1.0;
 
       Vec direction;

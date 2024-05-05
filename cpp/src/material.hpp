@@ -121,11 +121,6 @@ class Phong : public Material {
 
 
 // A PhongMirror material that combines Phong shading with reflection using Schlick's approximation
-// This material works differently from the other materials.
-// Instead of calling the evaluate() method, the raytracer must first use the get_reflected_ray()
-// method to calculate the reflection and then use the evaluate_mirror() method
-// to mix the phong and reflection colours.
-// TODO: PhongMirror should implement evaluate() to conform to the Material interface
 class PhongMirror : public Phong {
   public:
     PhongMirror(const Colour& _albedo, double _shininess, double _refraction_index)
@@ -134,17 +129,29 @@ class PhongMirror : public Phong {
     PhongMirror(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks, double _refraction_index)
       : Phong(_albedo, _shininess, _ka, _kd, _ks), refraction_index(_refraction_index) {}
 
-    // get the ray that must be cast to calculate the reflection
-    Ray get_reflected_ray(const Ray& r_in, const HitRecord& hit) const {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
+      // reflection ray
       Vec reflected = glm::normalize(glm::reflect(r_in.direction(), hit.normal));
-      return Ray(hit.p, reflected);
-    }
+      Ray reflect_ray(hit.p, reflected);
 
-    // mix light colours according to reflectance
-    Colour evaluate_mirror(const Scene& scene, const Ray& r_in, const HitRecord& hit, const Colour& reflection_colour) const {
+      // evaluate the reflected ray colour
+      HitRecord reflect_hit;
+      Colour reflect_colour;
+      if (scene.hit(reflect_ray, Interval(0.0001, infinity), reflect_hit)) {
+        // hit, evaluate the material
+        reflect_hit.object->material->evaluate(scene, reflect_ray, reflect_hit, reflect_colour, out_ray);
+      } else {
+        // miss, use black to discard the reflected ray contribution
+        reflect_colour = Colour(0,0,0);
+      }
+
+      // reflectance
       double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal), 1.0);
       double R = utils::reflectance(cos_theta, refraction_index);
-      return (1-R)*phong_shade(r_in, hit, scene) + R*reflection_colour;
+
+      // final colour is a mix of the own phong shading and refracted colour
+      out_colour = (1-R)*phong_shade(r_in, hit, scene) + R*reflect_colour;
+      return false;
     }
 
   private:

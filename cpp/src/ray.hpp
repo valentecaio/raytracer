@@ -9,7 +9,8 @@ namespace raytracer {
 class Ray {
   public:
     Ray() {}
-    Ray(const Point& _origin, const Vec& _direction) : orig(_origin), dir(glm::normalize(_direction)) {}
+    Ray(const Point& _origin, const Vec& _direction)
+      : orig(_origin), dir(glm::normalize(_direction)) {}
 
     Point origin() const { return orig; }
     Vec direction() const { return dir; }

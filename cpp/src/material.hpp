@@ -34,14 +34,20 @@ class Material {
 // A material that emits light
 class Light : public Material {
   public:
-    Colour colour;    // fixed colour of the light source
-    double intensity; // used in the shading equation
+    Colour colour;    // colour of the light source
+    double intensity; // intensity of the light source, used to calculate radiance
 
     Light(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
       out_colour = colour;
       return false;
+    }
+
+    // calculate the radiance of the light at a given distance
+    Colour radiance(double t) const {
+      // return colour * intensity / (t*t);
+      return colour * intensity;
     }
 };
 
@@ -60,31 +66,33 @@ class Phong : public Material {
   protected:
     Colour phong_shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene) const {
       Colour ambient_term = albedo * scene.ambient_light;
-      Colour total_diff = Colour(0, 0, 0);
-      Colour total_spec = Colour(0, 0, 0);
+      Colour total_diff = Colour(0,0,0);
+      Colour total_spec = Colour(0,0,0);
 
       // view direction is the opposite of the incoming ray direction (already normalized)
       Vec view_dir = -r_in.direction();
 
       // try to hit lights in the scene to calculate the shading
       for (const auto& light : scene.lights.objects) {
-        HitRecord tmp_hitrec;
+        HitRecord shadow_hitrec;
         auto diff = Colour(0,0,0);
         auto spec = Colour(0,0,0);
 
         // point lights are sampled once, area lights are sampled multiple times
-        double nsamples = (std::dynamic_pointer_cast<Quad>(light)) ? 1 : 1;
-        for (int i = 0; i < static_cast<int>(nsamples); i++) {
+        int nsamples = (std::dynamic_pointer_cast<Quad>(light)) ? 10 : 1;
+        for (int i = 0; i < nsamples; i++) {
           Point sample = light->get_sample();
           Vec light_dir = glm::normalize(sample - hitrec.p);
           auto shadow_ray = Ray(hitrec.p, light_dir);
-          if (scene.hit(shadow_ray, Interval(0.0001, infinity), tmp_hitrec) && tmp_hitrec.object == light) {
+          if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hitrec) && shadow_hitrec.object == light) {
             // light is visible from the hit point
             auto light_mat = std::dynamic_pointer_cast<Light>(light->material);
 
             // diffuse
-            double NdotL = std::max(glm::dot(hitrec.normal, light_dir), 0.0);
-            diff += albedo * light_mat->colour * light_mat->intensity * NdotL;
+            double distance = glm::length(sample - hitrec.p);
+            Colour radiance = light_mat->radiance(distance);
+            double attenuation = std::max(glm::dot(hitrec.normal, light_dir), 0.0);
+            diff += albedo * radiance * attenuation;
 
             // specular
             Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hitrec.normal));
@@ -92,14 +100,14 @@ class Phong : public Material {
             spec += light_mat->colour * light_mat->intensity * RdotV;
           }
         }
-        total_diff += diff/nsamples;
-        total_spec += spec/nsamples;
+        total_diff += diff/(double)nsamples;
+        total_spec += spec/(double)nsamples;
       }
       return ambient_term + total_diff + total_spec;
     }
 
   private:
-    Colour albedo;
+    Colour albedo;   // mamb, mdiff
     double shininess;
 };
 

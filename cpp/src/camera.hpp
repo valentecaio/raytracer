@@ -18,7 +18,7 @@ class Camera {
 
     double vfov = 90.0;             // vertical field of view in degrees
     Point look_from = Point(0,0,0); // camera location
-    Point look_at = Point(0,1,0);   // camera target
+    Point look_at = Point(0,0,-1);  // camera target
     Vec vup = Vec(0, 1, 0);         // camera up vector (view up)
 
     double defocus_angle = 0.0;     // angle of the cone with apex at the viewpoint and base at the camera center (0 = no defocus)
@@ -137,6 +137,7 @@ class Camera {
       HitRecord hitrec;
       if (!scene.hit(r_in, Interval(0.0001, infinity), hitrec))
         return scene.ambient_light;
+        // return Colour(0,0,0);
 
       // HIT //
 

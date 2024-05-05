@@ -21,6 +21,10 @@ void phong() {
   auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.4);
   scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
+  // background
+  auto material_background = make_shared<Phong>(Colour(0.1, 0.1, 0.1), 100);
+  scene.add(make_shared<Quad>(Point(-400, -40, -40), Vec(800, 0, 0), Vec(0, 80, 0), material_background));
+
   // spheres
   auto material_ground = make_shared<Phong>(Colour(0.8, 0.0, 0.8), 100);
   auto material_right  = make_shared<Phong>(Colour(0.8, 0.8, 0.0), 100);
@@ -28,10 +32,6 @@ void phong() {
   scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
   scene.add(make_shared<Sphere>(Point( 1.0,    0.0, -2.2), 0.5, material_right));
   scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.0), 0.5, material_center));
-
-  // mirror quad
-  // auto material_mirror = make_shared<Metal>(Colour(0.4, 0.4, 0.4), 0.0);
-  // scene.add(make_shared<Quad>(Point(-4, -1, -3), Vec(2, 0, -2), Vec(0, 2, 0), material_mirror));
 
   // mirror sphere
   auto material_mirror = make_shared<PhongMirror>(Colour(0.4, 0.4, 0.4), 1000, 0.02);
@@ -49,8 +49,6 @@ void phong() {
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
   camera.look_at = Point(0,0,-1);
-  camera.defocus_angle = 0;
-  camera.focus_dist = 1;
 
   utils::clock([&camera]() { camera.render(); });
 }
@@ -62,14 +60,14 @@ void cornell_box(bool use_phong) {
 
   // light
   scene.ambient_light = Colour(0.03, 0.03, 0.03);
-  auto mat_light = make_shared<Light>(Colour(1, 1, 1), 0.5);
+  auto mat_light = make_shared<Light>(Colour(1, 1, 1), 1);
   scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
 
   shared_ptr<Material> red, white, green, mirror;
   if (use_phong) {
-    red    = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 100);
+    red    = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 10);
     white  = (shared_ptr<Material>) make_shared<Phong>(Colour(.73, .73, .73), 100);
-    green  = (shared_ptr<Material>) make_shared<Phong>(Colour(.12, .45, .15), 100);
+    green  = (shared_ptr<Material>) make_shared<Phong>(Colour(.12, .45, .15), 10);
     mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
   } else {
     red    = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.65, .05, .05));
@@ -97,7 +95,6 @@ void cornell_box(bool use_phong) {
 
   Camera camera(scene);
 
-  camera.aspect_ratio = 1.0;
   camera.image_width = 600;
   camera.samples_per_pixel = use_phong ? 2 : 10;
   camera.max_depth = 15;
@@ -109,7 +106,7 @@ void cornell_box(bool use_phong) {
 }
 
 
-// a scene with quads, a strong ambient light and a point light
+// a scene with quads, a mirror, a strong ambient light and a point light
 void quads(bool use_phong) {
   Scene scene;
 
@@ -144,7 +141,6 @@ void quads(bool use_phong) {
 
   Camera camera(scene);
 
-  camera.aspect_ratio = 1.0;
   camera.image_width = 600;
   camera.samples_per_pixel = 10;
   camera.max_depth = 15;
@@ -182,7 +178,6 @@ void spheres(bool use_phong) {
   scene.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, mirror));
   scene.add(make_shared<Sphere>(Point( 0.3,   -0.1, -0.7), 0.2, glass));
 
-
   /////////////////////
 
   Camera camera(scene);
@@ -194,24 +189,22 @@ void spheres(bool use_phong) {
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
   camera.look_at = Point(0,0,-1);
-  camera.defocus_angle = 0;
-  camera.focus_dist = 1;
 
   utils::clock([&camera]() { camera.render(); });
 }
 
 
-// a scene with a Mesh bunny and a point Light
+// a scene with a Mesh bunny, strong ambient light and a point Light
 void bunny() {
   Scene scene;
 
   // light
-  scene.ambient_light = Colour(0.01, 0.01, 0.01);
-  auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.2);
+  scene.ambient_light = Colour(0.2, 0.2, 0.2);
+  auto material_light = make_shared<Light>(Colour(1, 1, 0), 2);
   scene.add(make_shared<Sphere>(Point(0.2, 0.3, 0), 0.01, material_light));
 
   // bunny
-  auto bunny_material = make_shared<Phong>(Colour(0.5, 0.45, 0.43), 500);
+  auto bunny_material = make_shared<Phong>(Colour(0.5, 0.5, 0.5), 500);
   auto bunny = make_shared<raytracer::Mesh>("assets/bunny.obj", bunny_material);
   scene.add(bunny);
 
@@ -223,13 +216,52 @@ void bunny() {
 
   Camera camera(scene);
 
-  camera.aspect_ratio = 16.0/9.0;
+  camera.aspect_ratio = 16.0 / 9.0;
   camera.image_width = 400;
-  camera.samples_per_pixel = 2;
+  camera.samples_per_pixel = 1;
   camera.max_depth = 5;
   camera.vfov = 50.0;
   camera.look_from = Point(0, 0, 0.3);
   camera.look_at = Point(0, 0.6, -1);
+
+  utils::clock([&camera]() { camera.render(); });
+}
+
+
+// a scene with Phong spheres, a Metal mirror and a point light
+void mixed() {
+  Scene scene;
+
+  // light
+  scene.ambient_light = Colour(0.05, 0.05, 0.05);
+  auto material_light = make_shared<Light>(Colour(1, 1, 1), 3);
+  scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
+
+  // spheres
+  auto material_ground = make_shared<Phong>(Colour(0.8, 0.0, 0.8), 100);
+  auto material_right  = make_shared<Phong>(Colour(0.8, 0.8, 0.0), 100);
+  auto material_center = make_shared<Phong>(Colour(0.0, 0.8, 0.8), 2);
+  scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, material_ground));
+  scene.add(make_shared<Sphere>(Point( 1.0,    0.0, -2.2), 0.5, material_right));
+  scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.0), 0.5, material_center));
+
+  // mirror quad
+  auto material_metal = make_shared<Metal>(Colour(0.4, 0.4, 0.4), 0.0);
+  scene.add(make_shared<Quad>(Point(-4, -1, -3), Vec(2, 0, -2), Vec(0, 2, 0), material_metal));
+
+  /////////////////////
+
+  Camera camera(scene);
+
+  camera.aspect_ratio = 16.0 / 9.0;
+  camera.image_width = 800;
+  camera.samples_per_pixel = 20;
+  camera.max_depth = 5;
+  camera.vfov = 90.0;
+  camera.look_from = Point(0,0,0);
+  camera.look_at = Point(0,0,-1);
+  camera.defocus_angle = 0;
+  camera.focus_dist = 1;
 
   utils::clock([&camera]() { camera.render(); });
 }
@@ -247,7 +279,7 @@ int main() {
     case 11: cornell_box(false); break;
     case 12: quads(false); break;
 
-    // mixed materials
-    // case 20: mixed(); break;
+    // mixed phong and pathtracing materials (experimental)
+    case 20: mixed(); break;
   }
 }

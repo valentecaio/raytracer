@@ -24,16 +24,16 @@ class HittableList : public Hittable {
       objects.push_back(object);
     }
 
-    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
-      HitRecord temp_hitrec;
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
+      HitRecord temp_hit;
       bool hit_anything = false;
       double closest_so_far = ray_t.max;
 
       for (const auto& object : objects) {
-        if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_hitrec)) {
+        if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_hit)) {
           hit_anything = true;
-          closest_so_far = temp_hitrec.t;
-          hitrec = temp_hitrec;
+          closest_so_far = temp_hit.t;
+          hit = temp_hit;
         }
       }
 

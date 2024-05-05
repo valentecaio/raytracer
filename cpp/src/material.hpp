@@ -24,7 +24,7 @@ class Material {
     // returns true if the a new ray should be cast, false otherwise
     // out_colour is the colour absorbed by the material
     // out_ray is the new ray to cast, only valid if the return value is true
-    virtual bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const {
+    virtual bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const {
       return false;
     }
 };
@@ -39,7 +39,7 @@ class Light : public Material {
 
     Light(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       out_colour = colour;
       return false;
     }
@@ -58,13 +58,13 @@ class Phong : public Material {
   public:
     Phong(const Colour& _albedo, double _shininess) : albedo(_albedo), shininess(_shininess) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
-      out_colour = phong_shade(r_in, hitrec, scene);
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
+      out_colour = phong_shade(r_in, hit, scene);
       return false;
     }
 
   protected:
-    Colour phong_shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene) const {
+    Colour phong_shade(const Ray& r_in, const HitRecord& hit, const Scene& scene) const {
       Colour ambient_term = albedo * scene.ambient_light;
       Colour total_diff = Colour(0,0,0);
       Colour total_spec = Colour(0,0,0);
@@ -74,7 +74,7 @@ class Phong : public Material {
 
       // try to hit lights in the scene to calculate the shading
       for (const auto& light : scene.lights.objects) {
-        HitRecord shadow_hitrec;
+        HitRecord shadow_hit;
         auto diff = Colour(0,0,0);
         auto spec = Colour(0,0,0);
 
@@ -82,20 +82,20 @@ class Phong : public Material {
         int nsamples = (std::dynamic_pointer_cast<Quad>(light)) ? 10 : 1;
         for (int i = 0; i < nsamples; i++) {
           Point sample = light->get_sample();
-          Vec light_dir = glm::normalize(sample - hitrec.p);
-          auto shadow_ray = Ray(hitrec.p, light_dir);
-          if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hitrec) && shadow_hitrec.object == light) {
+          Vec light_dir = glm::normalize(sample - hit.p);
+          auto shadow_ray = Ray(hit.p, light_dir);
+          if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hit) && shadow_hit.object == light) {
             // light is visible from the hit point
             auto light_mat = std::dynamic_pointer_cast<Light>(light->material);
 
             // diffuse
-            double distance = glm::length(sample - hitrec.p);
+            double distance = glm::length(sample - hit.p);
             Colour radiance = light_mat->radiance(distance);
-            double attenuation = std::max(glm::dot(hitrec.normal, light_dir), 0.0);
+            double attenuation = std::max(glm::dot(hit.normal, light_dir), 0.0);
             diff += albedo * radiance * attenuation;
 
             // specular
-            Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hitrec.normal));
+            Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hit.normal));
             double RdotV = std::pow(std::max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
             spec += light_mat->colour * light_mat->intensity * RdotV;
           }
@@ -124,16 +124,16 @@ class PhongMirror : public Phong {
      : Phong(_albedo, _shininess), refraction_index(_refraction_index) {}
 
     // get the ray that must be cast to calculate the reflection
-    Ray get_reflected_ray(const Ray& r_in, const HitRecord& hitrec) const {
-      Vec reflected = glm::normalize(glm::reflect(r_in.direction(), hitrec.normal));
-      return Ray(hitrec.p, reflected);
+    Ray get_reflected_ray(const Ray& r_in, const HitRecord& hit) const {
+      Vec reflected = glm::normalize(glm::reflect(r_in.direction(), hit.normal));
+      return Ray(hit.p, reflected);
     }
 
     // mix light colours according to reflectance
-    Colour evaluate_mirror(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, const Colour& reflection_colour) const {
-      double cos_theta = std::min(glm::dot(-r_in.direction(), hitrec.normal), 1.0);
+    Colour evaluate_mirror(const Scene& scene, const Ray& r_in, const HitRecord& hit, const Colour& reflection_colour) const {
+      double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal), 1.0);
       double R = utils::reflectance(cos_theta, refraction_index);
-      return (1-R)*phong_shade(r_in, hitrec, scene) + R*reflection_colour;
+      return (1-R)*phong_shade(r_in, hit, scene) + R*reflection_colour;
     }
 
   private:
@@ -147,14 +147,14 @@ class Diffuse : public Material {
   public:
     Diffuse(const Colour& _albedo) : albedo(_albedo) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       out_colour = albedo;
 
       // bounce the ray in a random direction
-      Vec bounce_direction = hitrec.normal + vec::random_unit();
+      Vec bounce_direction = hit.normal + vec::random_unit();
       if (vec::is_near_zero(bounce_direction)) // degenerate direction
-        bounce_direction = hitrec.normal;
-      out_ray = Ray(hitrec.p, bounce_direction);
+        bounce_direction = hit.normal;
+      out_ray = Ray(hit.p, bounce_direction);
 
       return true;
     }
@@ -172,16 +172,16 @@ class Metal : public Material {
     Metal(const Colour& _albedo, double _fuzz)
      : albedo(_albedo), fuzz(std::min(_fuzz, 1.0)) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       out_colour = albedo;
 
       // bounce the ray in a fuzzy direction
-      Vec reflected = glm::reflect(r_in.direction(), hitrec.normal);
+      Vec reflected = glm::reflect(r_in.direction(), hit.normal);
       reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
-      out_ray = Ray(hitrec.p, reflected);
+      out_ray = Ray(hit.p, reflected);
 
       // absorb rays that bounce below the surface
-      return glm::dot(out_ray.direction(), hitrec.normal) > 0;
+      return glm::dot(out_ray.direction(), hit.normal) > 0;
     }
 
   private:
@@ -195,21 +195,21 @@ class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       // dieletric material absorbs nothing
       out_colour = Colour(1, 1, 1);
 
-      double ri = hitrec.front_face ? (1.0/refraction_index) : refraction_index;
-      double cos_theta = std::min(glm::dot(-r_in.direction(), hitrec.normal), 1.0);
+      double ri = hit.front_face ? (1.0/refraction_index) : refraction_index;
+      double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal), 1.0);
       double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
       bool can_refract = ri * sin_theta <= 1.0;
 
       Vec direction;
       if (!can_refract || utils::reflectance(cos_theta, ri) > utils::random())
-        direction = glm::reflect(r_in.direction(), hitrec.normal);
+        direction = glm::reflect(r_in.direction(), hit.normal);
       else
-        direction = glm::refract(r_in.direction(), hitrec.normal, ri);
-      out_ray = Ray(hitrec.p, direction);
+        direction = glm::refract(r_in.direction(), hit.normal, ri);
+      out_ray = Ray(hit.p, direction);
 
       return true;
     }

@@ -32,13 +32,13 @@ class Mesh : public Primitive {
       load_obj(filename);
     }
 
-    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
       // the ray can only hit the mesh if it hits the bounding box first
-      if (!bbox->hit(r, ray_t, hitrec))
+      if (!bbox->hit(r, ray_t, hit))
         return false;
 
       // if the ray hits any triangle, the hit object is the mesh
-      return triangles.hit(r, ray_t, hitrec) && (hitrec.object = shared_from_this());
+      return triangles.hit(r, ray_t, hit) && (hit.object = shared_from_this());
     }
 
     // returns a random point in one of the triangles

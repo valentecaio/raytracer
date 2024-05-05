@@ -15,7 +15,7 @@ class Sphere : public Primitive {
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
       : center(_center), radius(std::max(0.0, _radius)) { material = _material; }
 
-    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
       Vec oc = r.origin() - center;                      // oc = A-C
       double a = glm::dot(r.direction(), r.direction()); // a = dot(B, B)
@@ -40,11 +40,11 @@ class Sphere : public Primitive {
       }
 
       // HIT !
-      hitrec.t = root;
-      hitrec.p = r.at(hitrec.t);
-      hitrec.object = shared_from_this();
-      Vec outward_normal = (hitrec.p-center)/radius;  // normalized outward normal
-      hitrec.set_face_normal(r, outward_normal);      // store the face orientation
+      hit.t = root;
+      hit.p = r.at(hit.t);
+      hit.object = shared_from_this();
+      Vec outward_normal = (hit.p-center)/radius;  // normalized outward normal
+      hit.set_face_normal(r, outward_normal);      // store the face orientation
       return true;
     }
 

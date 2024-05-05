@@ -12,7 +12,7 @@ namespace raytracer {
 class Hittable {
   public:
     virtual ~Hittable() = default;
-    virtual bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const = 0;
+    virtual bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const = 0;
 };
 
 } // namespace raytracer

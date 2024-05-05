@@ -34,18 +34,18 @@ class Scene : public Hittable {
     }
 
     // check if the ray intersects any object or light
-    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const {
-      HitRecord hitrec1, hitrec2;
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const {
+      HitRecord hit1, hit2;
 
-      bool hit_object = primitives.hit(r, ray_t, hitrec1);
-      bool hit_light = lights.hit(r, ray_t, hitrec2);
+      bool hit_object = primitives.hit(r, ray_t, hit1);
+      bool hit_light = lights.hit(r, ray_t, hit2);
 
       if (hit_light && hit_object)
-        hitrec = hitrec1.t < hitrec2.t ? hitrec1 : hitrec2;
+        hit = hit1.t < hit2.t ? hit1 : hit2;
       else if (hit_light)
-        hitrec = hitrec2;
+        hit = hit2;
       else if (hit_object)
-        hitrec = hitrec1;
+        hit = hit1;
 
       return hit_object || hit_light;;
     }

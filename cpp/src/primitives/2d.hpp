@@ -20,7 +20,7 @@ class Primitive2D : public Primitive {
 
     // the intersection of a ray with a 2D primitive is the intersection of the ray with the plane
     // where the primitive lies. The intersection point is then checked to be inside the primitive
-    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
       double denom = glm::dot(normal, r.direction());
 
       // ray and plane are parallels -> no intersection
@@ -46,10 +46,10 @@ class Primitive2D : public Primitive {
         return false;
 
       // HIT !
-      hitrec.t = t;
-      hitrec.p = p;
-      hitrec.set_face_normal(r, normal);
-      hitrec.object = shared_from_this();
+      hit.t = t;
+      hit.p = p;
+      hit.set_face_normal(r, normal);
+      hit.object = shared_from_this();
       return true;
     }
 

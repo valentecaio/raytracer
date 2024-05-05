@@ -134,8 +134,8 @@ class Camera {
 
       // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
       // misses are considered as background colour
-      HitRecord hitrec;
-      if (!scene.hit(r_in, Interval(0.0001, infinity), hitrec))
+      HitRecord hit;
+      if (!scene.hit(r_in, Interval(0.0001, infinity), hit))
         return scene.ambient_light;
         // return Colour(0,0,0);
 
@@ -143,14 +143,14 @@ class Camera {
 
       Colour c;
       Ray r_out;
-      if (auto material = std::dynamic_pointer_cast<PhongMirror>(hitrec.object->material)) {
+      if (auto material = std::dynamic_pointer_cast<PhongMirror>(hit.object->material)) {
         // PhongMirror are treated differently, because they have a different reflectance model.
-        r_out = material->get_reflected_ray(r_in, hitrec);
+        r_out = material->get_reflected_ray(r_in, hit);
         c = trace_ray(r_out, 1); // recursive call with depth 1: this ray cannot bounce again
-        return material->evaluate_mirror(scene, r_in, hitrec, c);
+        return material->evaluate_mirror(scene, r_in, hit, c);
       } else {
         // Phong, Diffuse, Light, Metal, Dieletric
-        if (hitrec.object->material->evaluate(scene, r_in, hitrec, c, r_out))
+        if (hit.object->material->evaluate(scene, r_in, hit, c, r_out))
           return c * trace_ray(r_out, depth-1); // ray bounced
         return c; // ray was absorbed
       }

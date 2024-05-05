@@ -37,10 +37,10 @@ class Box : public Primitive {
       material = _mat;
     }
 
-    bool hit(const Ray& r, Interval ray_t, HitRecord& hitrec) const override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
       // the ray intersects the box if it intersects any of the 6 quads
       // the only correction needed is to set the object pointer to the box
-      return faces.hit(r, ray_t, hitrec) && (hitrec.object = shared_from_this());
+      return faces.hit(r, ray_t, hit) && (hit.object = shared_from_this());
     }
 
     // returns a random point in one of the 6 box faces

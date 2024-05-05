@@ -1,5 +1,5 @@
-#ifndef BOX_HPP
-#define BOX_HPP
+#ifndef BOX_H
+#define BOX_H
 
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
@@ -55,4 +55,4 @@ class Box : public Primitive {
 
 } // namespace raytracer
 
-#endif // BOX_HPP
+#endif // BOX_H

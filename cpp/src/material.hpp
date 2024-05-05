@@ -4,13 +4,15 @@
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
 #include "utils/vec.hpp"
-#include "hittable/scene.hpp"
+// #include "primitives/2d.hpp"
+#include "scene.hpp"
 #include "ray.hpp"
 
 namespace raytracer {
 
 // Forward declarations to avoid circular dependencies
 class HitRecord;
+class Quad;
 
 // Abstract class that represents a material that can be applied to objects in the scene.
 class Material {
@@ -22,10 +24,11 @@ class Material {
     // returns true if the a new ray should be cast, false otherwise
     // out_colour is the colour absorbed by the material
     // out_ray is the new ray to cast, only valid if the return value is true
-    virtual bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const {
+    virtual bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const {
       return false;
     }
 };
+
 
 
 // A material that emits light
@@ -36,11 +39,12 @@ class Light : public Material {
 
     Light(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
-    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
       out_colour = colour;
       return false;
     }
 };
+
 
 
 // A Phong material that combines ambient, diffuse and specular lighting
@@ -48,17 +52,16 @@ class Phong : public Material {
   public:
     Phong(const Colour& _albedo, double _shininess) : albedo(_albedo), shininess(_shininess) {}
 
-    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
-      out_colour = shade(r_in, hitrec, scene);
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
+      out_colour = phong_shade(r_in, hitrec, scene);
       return false;
     }
 
-  private:
-    Colour shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene) const {
+  protected:
+    Colour phong_shade(const Ray& r_in, const HitRecord& hitrec, const Scene& scene) const {
       Colour ambient_term = albedo * scene.ambient_light;
-      Colour diffuse_term = Colour(0, 0, 0);
-      Colour specular_term = Colour(0, 0, 0);
-      double nsamples = 1;
+      Colour total_diff = Colour(0, 0, 0);
+      Colour total_spec = Colour(0, 0, 0);
 
       // view direction is the opposite of the incoming ray direction (already normalized)
       Vec view_dir = -r_in.direction();
@@ -66,6 +69,11 @@ class Phong : public Material {
       // try to hit lights in the scene to calculate the shading
       for (const auto& light : scene.lights.objects) {
         HitRecord tmp_hitrec;
+        auto diff = Colour(0,0,0);
+        auto spec = Colour(0,0,0);
+
+        // point lights are sampled once, area lights are sampled multiple times
+        double nsamples = (std::dynamic_pointer_cast<Quad>(light)) ? 1 : 1;
         for (int i = 0; i < static_cast<int>(nsamples); i++) {
           Point sample = light->get_sample();
           Vec light_dir = glm::normalize(sample - hitrec.p);
@@ -76,16 +84,18 @@ class Phong : public Material {
 
             // diffuse
             double NdotL = std::max(glm::dot(hitrec.normal, light_dir), 0.0);
-            diffuse_term += albedo * light_mat->colour * light_mat->intensity * NdotL;
+            diff += albedo * light_mat->colour * light_mat->intensity * NdotL;
 
             // specular
             Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hitrec.normal));
             double RdotV = std::pow(std::max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
-            specular_term += light_mat->colour * light_mat->intensity * RdotV;
+            spec += light_mat->colour * light_mat->intensity * RdotV;
           }
         }
+        total_diff += diff/nsamples;
+        total_spec += spec/nsamples;
       }
-      return ambient_term + (diffuse_term/nsamples) + (specular_term/nsamples);
+      return ambient_term + total_diff + total_spec;
     }
 
   private:
@@ -94,12 +104,42 @@ class Phong : public Material {
 };
 
 
-// A Diffuse material that bounces rays in random directions
-class Lambertian : public Material {
-  public:
-    Lambertian(const Colour& _albedo) : albedo(_albedo) {}
 
-    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+// A PhongMirror material that combines Phong shading with reflection using Schlick's approximation
+// This material works differently from the other materials.
+// Instead of calling the evaluate() method, the raytracer must first use the get_reflected_ray()
+// method to calculate the reflection and then use the evaluate_mirror() method
+// to mix the phong and reflection colours.
+class PhongMirror : public Phong {
+  public:
+    PhongMirror(const Colour& _albedo, double _shininess, double _refraction_index)
+     : Phong(_albedo, _shininess), refraction_index(_refraction_index) {}
+
+    // get the ray that must be cast to calculate the reflection
+    Ray get_reflected_ray(const Ray& r_in, const HitRecord& hitrec) const {
+      Vec reflected = glm::normalize(glm::reflect(r_in.direction(), hitrec.normal));
+      return Ray(hitrec.p, reflected);
+    }
+
+    // mix light colours according to reflectance
+    Colour evaluate_mirror(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, const Colour& reflection_colour) const {
+      double cos_theta = std::min(glm::dot(-r_in.direction(), hitrec.normal), 1.0);
+      double R = utils::reflectance(cos_theta, refraction_index);
+      return (1-R)*phong_shade(r_in, hitrec, scene) + R*reflection_colour;
+    }
+
+  private:
+    double refraction_index; // refractive index in vacuum or air,
+};
+
+
+
+// A Diffuse (Lambertian) material that bounces rays in random directions
+class Diffuse : public Material {
+  public:
+    Diffuse(const Colour& _albedo) : albedo(_albedo) {}
+
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
       out_colour = albedo;
 
       // bounce the ray in a random direction
@@ -116,13 +156,15 @@ class Lambertian : public Material {
 };
 
 
+
 // A Metal / Mirror material that reflects rays
 // if fuzz is zero, the reflection is perfect (Mirror)
 class Metal : public Material {
   public:
-    Metal(const Colour& _albedo, double _fuzz) : albedo(_albedo), fuzz(std::min(_fuzz, 1.0)) {}
+    Metal(const Colour& _albedo, double _fuzz)
+     : albedo(_albedo), fuzz(std::min(_fuzz, 1.0)) {}
 
-    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
       out_colour = albedo;
 
       // bounce the ray in a fuzzy direction
@@ -145,7 +187,7 @@ class Dielectric : public Material {
   public:
     Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
 
-    bool evaluate(const Ray& r_in, const HitRecord& hitrec, const Scene& scene, Colour& out_colour, Ray& out_ray) const override {
+    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hitrec, Colour& out_colour, Ray& out_ray) const override {
       // dieletric material absorbs nothing
       out_colour = Colour(1, 1, 1);
 
@@ -155,7 +197,7 @@ class Dielectric : public Material {
       bool can_refract = ri * sin_theta <= 1.0;
 
       Vec direction;
-      if (!can_refract || reflectance(cos_theta, ri) > utils::random())
+      if (!can_refract || utils::reflectance(cos_theta, ri) > utils::random())
         direction = glm::reflect(r_in.direction(), hitrec.normal);
       else
         direction = glm::refract(r_in.direction(), hitrec.normal, ri);
@@ -168,13 +210,6 @@ class Dielectric : public Material {
     // refractive index in vacuum or air,
     // or ratio of the material's refractive index over the refractive index of the enclosing medium
     double refraction_index;
-
-    // Schlick's approximation for reflectance
-    double reflectance(double cosine, double refraction_idx) const {
-      double r0 = (1-refraction_idx) / (1+refraction_idx);
-      r0 = r0*r0;
-      return r0 + (1-r0)*pow((1 - cosine), 5);
-    }
 };
 
 

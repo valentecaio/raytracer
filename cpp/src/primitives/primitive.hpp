@@ -1,5 +1,5 @@
-#ifndef PRIMITIVE_HPP
-#define PRIMITIVE_HPP
+#ifndef PRIMITIVE_H
+#define PRIMITIVE_H
 
 #include "../utils/common.hpp"
 #include "../hittable/hittable.hpp"
@@ -20,4 +20,4 @@ class Primitive : public std::enable_shared_from_this<Primitive>, public Hittabl
 
 } // namespace raytracer
 
-#endif // PRIMITIVE_HPP
+#endif // PRIMITIVE_H

@@ -1,9 +1,9 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "../utils/common.hpp"
-#include "../utils/interval.hpp"
-#include "hittable_list.hpp"
+#include "utils/common.hpp"
+#include "utils/interval.hpp"
+#include "hittable/hittable_list.hpp"
 
 namespace raytracer {
 
@@ -48,6 +48,10 @@ class Scene : public Hittable {
         hitrec = hitrec1;
 
       return hit_object || hit_light;;
+    }
+
+    void ping() const {
+      std::clog << "pong" << std::endl;
     }
 };
 

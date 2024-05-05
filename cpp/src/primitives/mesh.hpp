@@ -1,5 +1,5 @@
-#ifndef MESH_HPP
-#define MESH_HPP
+#ifndef MESH_H
+#define MESH_H
 
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
@@ -105,4 +105,4 @@ class Mesh : public Primitive {
 
 } // namespace raytracer
 
-#endif // MESH_HPP
+#endif // MESH_H

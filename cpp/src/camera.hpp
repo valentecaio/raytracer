@@ -3,7 +3,7 @@
 
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
-#include "hittable/scene.hpp"
+#include "scene.hpp"
 #include "material.hpp"
 
 namespace raytracer {
@@ -130,7 +130,7 @@ class Camera {
     Colour trace_ray(const Ray& r_in, int depth) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth <= 0)
-        return scene.ambient_light;
+        return Colour(0,0,0);
 
       // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
       // misses are considered as background colour
@@ -138,14 +138,21 @@ class Camera {
       if (!scene.hit(r_in, Interval(0.0001, infinity), hitrec))
         return scene.ambient_light;
 
-      // HIT !
-      // if the material fully absorbed the ray, return the material evaluated colour
-      // otherwise, the material evaluation will return a new ray to trace
+      // HIT //
+
       Colour c;
       Ray r_out;
-      if (hitrec.object->material->evaluate(r_in, hitrec, scene, c, r_out))
-        return c * trace_ray(r_out, depth-1);
-      return c;
+      if (auto material = std::dynamic_pointer_cast<PhongMirror>(hitrec.object->material)) {
+        // PhongMirror are treated differently, because they have a different reflectance model.
+        r_out = material->get_reflected_ray(r_in, hitrec);
+        c = trace_ray(r_out, 1); // recursive call with depth 1: this ray cannot bounce again
+        return material->evaluate_mirror(scene, r_in, hitrec, c);
+      } else {
+        // Phong, Diffuse, Light, Metal, Dieletric
+        if (hitrec.object->material->evaluate(scene, r_in, hitrec, c, r_out))
+          return c * trace_ray(r_out, depth-1); // ray bounced
+        return c; // ray was absorbed
+      }
     }
 
     // get a randomly sampled camera ray for the pixel at location i,j

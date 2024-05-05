@@ -22,6 +22,13 @@ inline T max(std::initializer_list<T> list) {
   return *std::max_element(list.begin(), list.end());
 }
 
+// Schlick's approximation for reflectance
+inline double reflectance(double cos_theta, double refraction_idx) {
+  double r0 = (1-refraction_idx) / (1+refraction_idx);
+  r0 = r0*r0;
+  return r0 + (1-r0)*pow((1 - cos_theta), 5);
+}
+
 
 
 // RANDOM GENERATION UTILS //

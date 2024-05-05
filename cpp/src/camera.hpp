@@ -146,10 +146,10 @@ class Camera {
       if (auto material = std::dynamic_pointer_cast<PhongMirror>(hit.object->material)) {
         // PhongMirror are treated differently, because they have a different reflectance model.
         r_out = material->get_reflected_ray(r_in, hit);
-        c = trace_ray(r_out, 1); // recursive call with depth 1: this ray cannot bounce again
+        c = trace_ray(r_out, 1); // recursive call with depth 1: this ray cannot bounce
         return material->evaluate_mirror(scene, r_in, hit, c);
       } else {
-        // Phong, Diffuse, Light, Metal, Dieletric
+        // Phong, Diffuse, LightMat, Metal, Dieletric
         if (hit.object->material->evaluate(scene, r_in, hit, c, r_out))
           return c * trace_ray(r_out, depth-1); // ray bounced
         return c; // ray was absorbed

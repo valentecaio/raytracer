@@ -8,7 +8,7 @@
 namespace raytracer {
 
 // Forward declarations to avoid circular dependencies.
-class Light;
+class LightMat;
 
 // A hittable scene in 3D space.
 class Scene : public Hittable {
@@ -26,7 +26,7 @@ class Scene : public Hittable {
     }
 
     void add(shared_ptr<Primitive> object) {
-      if (std::dynamic_pointer_cast<Light>(object->material)) {
+      if (std::dynamic_pointer_cast<LightMat>(object->material)) {
         lights.add(object);
       } else {
         primitives.add(object);
@@ -48,10 +48,6 @@ class Scene : public Hittable {
         hit = hit1;
 
       return hit_object || hit_light;;
-    }
-
-    void ping() const {
-      std::clog << "pong" << std::endl;
     }
 };
 

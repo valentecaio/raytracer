@@ -32,12 +32,12 @@ class Material {
 
 
 // A material that emits light
-class Light : public Material {
+class LightMat : public Material {
   public:
     Colour colour;    // colour of the light source
     double intensity; // intensity of the light source, used to calculate radiance
 
-    Light(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
+    LightMat(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       out_colour = colour;
@@ -45,8 +45,8 @@ class Light : public Material {
     }
 
     // calculate the radiance of the light at a given distance
-    Colour radiance(double t) const {
-      // return colour * intensity / (t*t);
+    Vec radiance(double t) const {
+      // return colour * intensity / (t*t); // TODO
       return colour * intensity;
     }
 };
@@ -56,7 +56,11 @@ class Light : public Material {
 // A Phong material that combines ambient, diffuse and specular lighting
 class Phong : public Material {
   public:
-    Phong(const Colour& _albedo, double _shininess) : albedo(_albedo), shininess(_shininess) {}
+    Phong(const Colour& _albedo, double _shininess)
+      : colour(_albedo), shininess(_shininess) {}
+
+    Phong(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks)
+      : colour(_albedo), shininess(_shininess), ka(_ka), kd(_kd), ks(_ks) {}
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       out_colour = phong_shade(r_in, hit, scene);
@@ -65,7 +69,7 @@ class Phong : public Material {
 
   protected:
     Colour phong_shade(const Ray& r_in, const HitRecord& hit, const Scene& scene) const {
-      Colour ambient_term = albedo * scene.ambient_light;
+      Colour total_amb = scene.ambient_light;
       Colour total_diff = Colour(0,0,0);
       Colour total_spec = Colour(0,0,0);
 
@@ -83,32 +87,35 @@ class Phong : public Material {
         for (int i = 0; i < nsamples; i++) {
           Point sample = light->get_sample();
           Vec light_dir = glm::normalize(sample - hit.p);
+
           auto shadow_ray = Ray(hit.p, light_dir);
           if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hit) && shadow_hit.object == light) {
             // light is visible from the hit point
-            auto light_mat = std::dynamic_pointer_cast<Light>(light->material);
+            auto light_mat = std::dynamic_pointer_cast<LightMat>(light->material);
 
             // diffuse
-            double distance = glm::length(sample - hit.p);
-            Colour radiance = light_mat->radiance(distance);
+            Vec light_radiance = light_mat->radiance(glm::length(sample - hit.p));
             double attenuation = std::max(glm::dot(hit.normal, light_dir), 0.0);
-            diff += albedo * radiance * attenuation;
+            diff += attenuation * light_radiance;
 
             // specular
             Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hit.normal));
             double RdotV = std::pow(std::max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
-            spec += light_mat->colour * light_mat->intensity * RdotV;
+            spec += light_radiance * RdotV;
           }
         }
         total_diff += diff/(double)nsamples;
         total_spec += spec/(double)nsamples;
       }
-      return ambient_term + total_diff + total_spec;
+      return colour * (ka*total_amb + kd*total_diff + ks*total_spec);
     }
 
   private:
-    Colour albedo;   // mamb, mdiff
-    double shininess;
+    Colour colour;    // colour of the material
+    double shininess; // shininess of the material
+    double ka = 0.5;  // ambient coefficient
+    double kd = 0.5;  // diffuse coefficient
+    double ks = 0.5;  // specular coefficient
 };
 
 
@@ -118,10 +125,14 @@ class Phong : public Material {
 // Instead of calling the evaluate() method, the raytracer must first use the get_reflected_ray()
 // method to calculate the reflection and then use the evaluate_mirror() method
 // to mix the phong and reflection colours.
+// TODO: PhongMirror should implement evaluate() to conform to the Material interface
 class PhongMirror : public Phong {
   public:
     PhongMirror(const Colour& _albedo, double _shininess, double _refraction_index)
-     : Phong(_albedo, _shininess), refraction_index(_refraction_index) {}
+      : Phong(_albedo, _shininess), refraction_index(_refraction_index) {}
+
+    PhongMirror(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks, double _refraction_index)
+      : Phong(_albedo, _shininess, _ka, _kd, _ks), refraction_index(_refraction_index) {}
 
     // get the ray that must be cast to calculate the reflection
     Ray get_reflected_ray(const Ray& r_in, const HitRecord& hit) const {

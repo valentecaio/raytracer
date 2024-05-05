@@ -12,13 +12,13 @@
 using namespace raytracer;
 
 
-// a scene with Phong spheres, one PhongMirror sphere and a point light
+// a scene with Phong and PhongMirror materials, composed by spheres and a point light
 void phong() {
   Scene scene;
 
   // light
   scene.ambient_light = Colour(0.05, 0.05, 0.05);
-  auto material_light = make_shared<Light>(Colour(1, 1, 1), 0.4);
+  auto material_light = make_shared<LightMat>(Colour(1, 1, 1), 0.4);
   scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
   // background
@@ -54,25 +54,25 @@ void phong() {
 }
 
 
-// a scene with quads, boxes, a sphere and a quad light
+// a scene with Diffuse and MeEtal/Mirror materials, composed with quads, boxes, a sphere and a quad light
 void cornell_box(bool use_phong) {
   Scene scene;
 
   // light
   scene.ambient_light = Colour(0.03, 0.03, 0.03);
-  auto mat_light = make_shared<Light>(Colour(1, 1, 1), 1);
+  auto mat_light = make_shared<LightMat>(Colour(1, 1, 1), 1);
   scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
 
   shared_ptr<Material> red, white, green, mirror;
   if (use_phong) {
     red    = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 10);
     white  = (shared_ptr<Material>) make_shared<Phong>(Colour(.73, .73, .73), 100);
-    green  = (shared_ptr<Material>) make_shared<Phong>(Colour(.12, .45, .15), 10);
+    green  = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(.12, .45, .15), 10, 0.1);
     mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
   } else {
     red    = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.65, .05, .05));
     white  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.73, .73, .73));
-    green  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.12, .45, .15));
+    green  = (shared_ptr<Material>) make_shared<Metal>(Colour(.12, .45, .15), 0.3);
     mirror = (shared_ptr<Material>) make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
     scene.ambient_light = Colour(0.3, 0.3, 0.3); // scene is too dark
   }
@@ -112,16 +112,16 @@ void quads(bool use_phong) {
 
   // light
   scene.ambient_light = Colour(0.1, 0.1, 0.1);
-  auto material_light = make_shared<Light>(Colour(1.0, 1.0, 1.0), 1);
+  auto material_light = make_shared<LightMat>(Colour(1.0, 1.0, 1.0), 1.5);
   scene.add(make_shared<Sphere>(Point(1, 2, 0), 0.2, material_light));
 
   shared_ptr<Material> left_red, back_green, upper_orange, lower_cyan, blue_metal;
   if (use_phong) {
     left_red     = (shared_ptr<Material>) make_shared<Phong>(Colour(1.0, 0.2, 0.2), 10);
     back_green   = (shared_ptr<Material>) make_shared<Phong>(Colour(0.2, 1.0, 0.2), 10);
-    upper_orange = (shared_ptr<Material>) make_shared<Phong>(Colour(1.0, 0.5, 0.0), 10);
+    upper_orange = (shared_ptr<Material>) make_shared<Phong>(Colour(1.0, 0.5, 0.0), 100);
     lower_cyan   = (shared_ptr<Material>) make_shared<Phong>(Colour(0.2, 0.8, 0.8), 10);
-    blue_metal   = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.4, 0.4, 1.0), 10, 0.05);
+    blue_metal   = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.4, 0.4, 1.0), 10, 0.2);
   } else {
     left_red     = (shared_ptr<Material>) make_shared<Diffuse>(Colour(1.0, 0.2, 0.2));
     back_green   = (shared_ptr<Material>) make_shared<Diffuse>(Colour(0.2, 1.0, 0.2));
@@ -141,7 +141,7 @@ void quads(bool use_phong) {
 
   Camera camera(scene);
 
-  camera.image_width = 600;
+  camera.image_width = 800;
   camera.samples_per_pixel = 10;
   camera.max_depth = 15;
   camera.vfov = 80;
@@ -158,7 +158,7 @@ void spheres(bool use_phong) {
 
   // light
   scene.ambient_light = Colour(0.05, 0.05, 0.05);
-  auto material_light  = make_shared<Light>(Colour(1, 1, 0), 1);
+  auto material_light  = make_shared<LightMat>(Colour(1, 1, 0), 1);
   scene.add(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_light));
 
   shared_ptr<Material> ground, center;
@@ -200,7 +200,7 @@ void bunny() {
 
   // light
   scene.ambient_light = Colour(0.2, 0.2, 0.2);
-  auto material_light = make_shared<Light>(Colour(1, 1, 0), 2);
+  auto material_light = make_shared<LightMat>(Colour(1, 1, 0), 2);
   scene.add(make_shared<Sphere>(Point(0.2, 0.3, 0), 0.01, material_light));
 
   // bunny
@@ -234,7 +234,7 @@ void mixed() {
 
   // light
   scene.ambient_light = Colour(0.05, 0.05, 0.05);
-  auto material_light = make_shared<Light>(Colour(1, 1, 1), 3);
+  auto material_light = make_shared<LightMat>(Colour(1, 1, 1), 3);
   scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
   // spheres

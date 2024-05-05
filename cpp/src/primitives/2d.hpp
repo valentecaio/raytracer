@@ -15,9 +15,6 @@ class Primitive2D : public Primitive {
   public:
     virtual ~Primitive2D() = default;
 
-    // check if a 2D point with planar coordinates (alpha, beta) is inside the primitive
-    virtual bool is_hit(double alpha, double beta) const = 0;
-
     // the intersection of a ray with a 2D primitive is the intersection of the ray with the plane
     // where the primitive lies. The intersection point is then checked to be inside the primitive
     bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
@@ -53,6 +50,12 @@ class Primitive2D : public Primitive {
       return true;
     }
 
+
+  // the following members must be defined at the constructor of the derived class
+  protected:
+    Point origin; // origin point of the primitive, in the plane
+    Vec u, v;     // two vectors that define the plane where the primitive lies
+
     // should be called by the constructor of the derived class
     // after setting the origin, u and v fields
     void set_constants() {
@@ -69,16 +72,15 @@ class Primitive2D : public Primitive {
       w = n / glm::dot(n, n);
     }
 
-  // the following members must be defined at the constructor of the derived class
-  protected:
-    Point origin; // origin point of the primitive, in the plane
-    Vec normal;   // normal vector to the plane that contains the primitive, normalized
-    Vec u, v;     // two vectors that define the plane where the primitive lies
 
   // the following members are calculated by the set_constants method
   private:
-    Vec w;        // constant used to find the planar coordinates of a point
-    double d;     // constant term of the plane equation [ax + by + cz = d]
+    Vec normal; // normal vector to the plane that contains the primitive, normalized
+    Vec w;      // constant used to find the planar coordinates of a point
+    double d;   // constant term of the plane equation [ax + by + cz = d]
+
+    // check if a 2D point with planar coordinates (alpha, beta) is inside the 2D primitive
+    virtual bool is_hit(double alpha, double beta) const = 0;
 };
 
 
@@ -94,12 +96,14 @@ class Quad : public Primitive2D {
       set_constants();
     }
 
-    bool is_hit(double alpha, double beta) const {
-      return alpha >= 0 && beta >= 0 && alpha <= 1 && beta <= 1;
-    }
-
     Point get_sample() const override {
       return utils::sample_quad(origin, u, v);
+    }
+
+
+  private:
+    bool is_hit(double alpha, double beta) const {
+      return alpha >= 0 && beta >= 0 && alpha <= 1 && beta <= 1;
     }
 };
 
@@ -119,12 +123,13 @@ class Triangle : public Primitive2D {
       set_constants();
     }
 
-    bool is_hit(double alpha, double beta) const {
-      return alpha > 0 && beta > 0 && (alpha + beta <= 1);
-    }
-
     Point get_sample() const override {
       return utils::sample_triangle(origin, u, v);
+    }
+
+  private:
+    bool is_hit(double alpha, double beta) const {
+      return alpha > 0 && beta > 0 && (alpha + beta <= 1);
     }
 };
 

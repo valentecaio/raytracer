@@ -10,7 +10,7 @@
 
 namespace raytracer {
 
-// A hittable box in 3D space defined by a list of 6 quads.
+// A hittable box in 3D space composed by a list of 6 quads.
 class Box : public Primitive {
   public:
     Point pmin, pmax; // unused but useful for debug
@@ -18,6 +18,7 @@ class Box : public Primitive {
     Box() = default;
     ~Box() = default;
 
+    // Construct a box from two points that define the opposite corners of the box.
     Box(const Point& _a, const Point& _b, shared_ptr<Material> _mat) {
       pmin = Point(std::min(_a.x, _b.x), std::min(_a.y, _b.y), std::min(_a.z, _b.z));
       pmax = Point(std::max(_a.x, _b.x), std::max(_a.y, _b.y), std::max(_a.z, _b.z));
@@ -37,6 +38,8 @@ class Box : public Primitive {
       material = _mat;
     }
 
+    // Checks if the ray intersects any of the 6 quads
+    // and sets the object pointer to the box.
     bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
       // the ray intersects the box if it intersects any of the 6 quads
       // the only correction needed is to set the object pointer to the box

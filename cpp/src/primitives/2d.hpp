@@ -11,12 +11,16 @@ namespace raytracer {
 
 
 // Abstract class that represents an instance of a 2D geometric object in the scene.
+// These primitives are defined by an origin point and two vectors that define the plane
+// where they lie. Each derived class must implement the is_hit() method that checks
+// if a point with planar coordinates (alpha, beta) is inside the primitive boundaries.
 class Primitive2D : public Primitive {
   public:
     virtual ~Primitive2D() = default;
 
-    // the intersection of a ray with a 2D primitive is the intersection of the ray with the plane
-    // where the primitive lies. The intersection point is then checked to be inside the primitive
+    // the intersection of a ray with a 2D primitive is the intersection of the
+    // ray with the plane where the primitive lies.
+    // the intersection point is then checked to be inside the primitive
     bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
       double denom = glm::dot(normal, r.direction());
 

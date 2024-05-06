@@ -15,6 +15,9 @@ class Sphere : public Primitive {
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
       : center(_center), radius(std::max(0.0, _radius)) { material = _material; }
 
+    // Solves the quadratic equation for the ray-sphere intersection,
+    // and returns the nearest intersection point within the acceptable range.
+    // The normal is normalised by the radius.
     bool hit(const Ray& r, Interval ray_t, HitRecord& hit) const override {
       // t = (-b +- sqrt(b*b - 4*a*c)) / 2*a
       Vec oc = r.origin() - center;                      // oc = A-C
@@ -48,6 +51,7 @@ class Sphere : public Primitive {
       return true;
     }
 
+    // By now, sphere lights are point lights.
     Point get_sample() const override {
       return center; // TODO: random point on the sphere
     }

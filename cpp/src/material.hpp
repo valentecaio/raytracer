@@ -4,7 +4,6 @@
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
 #include "utils/vec.hpp"
-// #include "primitives/2d.hpp"
 #include "scene.hpp"
 #include "ray.hpp"
 
@@ -12,7 +11,8 @@ namespace raytracer {
 
 // Forward declarations to avoid circular dependencies
 class HitRecord;
-class Quad;
+class Sphere;
+
 
 // Abstract class that represents a material that can be applied to objects in the scene.
 class Material {
@@ -22,8 +22,8 @@ class Material {
     virtual ~Material() = default;
 
     // returns true if the a new ray should be cast, false otherwise
-    // out_colour is the colour absorbed by the material
-    // out_ray is the new ray to cast, only valid if the return value is true
+    // out_colour is filled with the colour of the material at the hit point
+    // out_ray is filled with the new ray to cast, if any
     virtual bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const {
       return false;
     }
@@ -57,10 +57,10 @@ class LightMat : public Material {
 class Phong : public Material {
   public:
     Phong(const Colour& _albedo, double _shininess)
-      : colour(_albedo), shininess(_shininess) {}
+      : albedo(_albedo), shininess(_shininess) {}
 
     Phong(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks)
-      : colour(_albedo), shininess(_shininess), ka(_ka), kd(_kd), ks(_ks) {}
+      : albedo(_albedo), shininess(_shininess), ka(_ka), kd(_kd), ks(_ks) {}
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       out_colour = phong_shade(r_in, hit, scene);
@@ -83,13 +83,14 @@ class Phong : public Material {
         auto spec = Colour(0,0,0);
 
         // point lights are sampled once, area lights are sampled multiple times
-        int nsamples = (std::dynamic_pointer_cast<Quad>(light)) ? 10 : 1;
+        int nsamples = (std::dynamic_pointer_cast<Sphere>(light)) ? 1 : 10;
         for (int i = 0; i < nsamples; i++) {
           Point sample = light->get_sample();
           Vec light_dir = glm::normalize(sample - hit.p);
 
           auto shadow_ray = Ray(hit.p, light_dir);
-          if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hit) && shadow_hit.object == light) {
+          if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hit)
+              && shadow_hit.object == light) {
             // light is visible from the hit point
             auto light_mat = std::dynamic_pointer_cast<LightMat>(light->material);
 
@@ -107,11 +108,11 @@ class Phong : public Material {
         total_diff += diff/(double)nsamples;
         total_spec += spec/(double)nsamples;
       }
-      return colour * (ka*total_amb + kd*total_diff + ks*total_spec);
+      return albedo * (ka*total_amb + kd*total_diff + ks*total_spec);
     }
 
   private:
-    Colour colour;    // colour of the material
+    Colour albedo;    // colour of the material
     double shininess; // shininess of the material
     double ka = 0.5;  // ambient coefficient
     double kd = 0.5;  // diffuse coefficient
@@ -123,11 +124,11 @@ class Phong : public Material {
 // A PhongMirror material that combines Phong shading with reflection using Schlick's approximation
 class PhongMirror : public Phong {
   public:
-    PhongMirror(const Colour& _albedo, double _shininess, double _refraction_index)
-      : Phong(_albedo, _shininess), refraction_index(_refraction_index) {}
+    PhongMirror(const Colour& _albedo, double _shininess, double _refract_idx)
+      : Phong(_albedo, _shininess), refract_idx(_refract_idx) {}
 
-    PhongMirror(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks, double _refraction_index)
-      : Phong(_albedo, _shininess, _ka, _kd, _ks), refraction_index(_refraction_index) {}
+    PhongMirror(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks, double _refract_idx)
+      : Phong(_albedo, _shininess, _ka, _kd, _ks), refract_idx(_refract_idx) {}
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       // reflection ray
@@ -141,21 +142,21 @@ class PhongMirror : public Phong {
         // hit, evaluate the material
         reflect_hit.object->material->evaluate(scene, reflect_ray, reflect_hit, reflect_colour, out_ray);
       } else {
-        // miss, use black to discard the reflected ray contribution
-        reflect_colour = Colour(0,0,0);
+        // miss, use scene background colour
+        reflect_colour = scene.background;
       }
 
       // reflectance
       double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal), 1.0);
-      double R = utils::reflectance(cos_theta, refraction_index);
+      double R = utils::reflectance(cos_theta, refract_idx);
 
-      // final colour is a mix of the own phong shading and refracted colour
+      // final colour is a mix of the phong shading and reflected colour
       out_colour = (1-R)*phong_shade(r_in, hit, scene) + R*reflect_colour;
       return false;
     }
 
   private:
-    double refraction_index; // refractive index in vacuum or air,
+    double refract_idx; // refractive index in vacuum or air,
 };
 
 
@@ -211,13 +212,13 @@ class Metal : public Material {
 // A Dielectric (glass) material that refracts rays when possible and reflects them otherwise
 class Dielectric : public Material {
   public:
-    Dielectric(double _refraction_index) : refraction_index(_refraction_index) {}
+    Dielectric(double _refract_idx) : refract_idx(_refract_idx) {}
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       // dieletric material absorbs nothing
       out_colour = Colour(1, 1, 1);
 
-      double ri = hit.front_face ? (1.0/refraction_index) : refraction_index;
+      double ri = hit.front_face ? (1.0/refract_idx) : refract_idx;
       double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal), 1.0);
       double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
       bool can_refract = ri * sin_theta <= 1.0;
@@ -235,7 +236,7 @@ class Dielectric : public Material {
   private:
     // refractive index in vacuum or air,
     // or ratio of the material's refractive index over the refractive index of the enclosing medium
-    double refraction_index;
+    double refract_idx;
 };
 
 

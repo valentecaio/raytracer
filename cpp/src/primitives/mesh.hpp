@@ -12,8 +12,10 @@
 
 namespace raytracer {
 
-// A mesh is list of 2D triangles with a bounding box to speed up the intersection tests.
+// The Mesh primitive is a list of triangles with a bounding box to speed up the intersection tests.
 // This is still a simple implementation, very inefficient and experimental.
+// To simplify code, it makes use of the existing Triangle and Box primitives,
+// although this is not the most efficient way to implement a mesh.
 class Mesh : public Primitive {
   public:
     Mesh() = default;

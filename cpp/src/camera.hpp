@@ -137,8 +137,7 @@ class Camera {
       // misses are considered as background colour
       HitRecord hit;
       if (!scene.hit(r_in, Interval(0.0001, infinity), hit))
-        return scene.ambient_light;
-        // return Colour(0,0,0);
+        return scene.background;
 
       // HIT //
 

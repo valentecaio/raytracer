@@ -34,19 +34,20 @@ class Camera {
     void render() {
       initialize();
 
-      // experimental parallelization: uncomment one of the pragma directives to enable
+    #ifdef OPENMP
+      // CPU parallelization
+      #pragma omp parallel for schedule(static)
 
-      // OpenACC for GPU parallelization
-      // auto pixels = std::vector<std::vector<Colour>>(image_height, std::vector<Colour>(image_width));
-      // auto image_width = this->image_width;
-      // auto image_height = this->image_height;
-      // auto samples_per_pixel = this->samples_per_pixel;
-      // auto max_depth = this->max_depth;
-      // #pragma acc data copy(pixels, image_height, image_width, samples_per_pixel, max_depth)
-      // #pragma acc parallel loop
-
-      // OpenMP for CPU parallelization
-      // #pragma omp parallel for schedule(static)
+    #elif defined(OPENACC)
+      // GPU parallelization (experimental)
+      auto pixels = std::vector<std::vector<Colour>>(image_height, std::vector<Colour>(image_width));
+      auto image_width = this->image_width;
+      auto image_height = this->image_height;
+      auto samples_per_pixel = this->samples_per_pixel;
+      auto max_depth = this->max_depth;
+      #pragma acc data copy(pixels, image_height, image_width, samples_per_pixel, max_depth)
+      #pragma acc parallel loop
+    #endif
 
       for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {

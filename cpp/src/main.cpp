@@ -15,10 +15,11 @@ using namespace raytracer;
 // a scene with Phong and PhongMirror materials, composed by spheres and a point light
 void phong() {
   Scene scene;
+  scene.background = Colour(0.1, 0.1, 0.1);
 
   // light
   scene.ambient_light = Colour(0.05, 0.05, 0.05);
-  auto material_light = make_shared<LightMat>(Colour(1, 1, 1), 0.4);
+  auto material_light = make_shared<LightMat>(Colour(1, 1, 1), 1);
   scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
   // background
@@ -42,10 +43,9 @@ void phong() {
 
   Camera camera(scene);
 
-  camera.aspect_ratio = 16.0 / 9.0;
-  camera.image_width = 600;
+  camera.aspect_ratio = 16.0/9.0;
+  camera.image_width = 400;
   camera.samples_per_pixel = 20;
-  camera.max_depth = 5;
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
   camera.look_at = Point(0,0,-1);
@@ -54,21 +54,25 @@ void phong() {
 }
 
 
-// a scene with Diffuse and MeEtal/Mirror materials, composed with quads, boxes, a sphere and a quad light
+// a scene with Diffuse and Metal/Mirror materials, composed with quads, boxes, a sphere and a quad light
 void cornell_box(bool use_phong) {
   Scene scene;
+  scene.background = Colour(0.1, 0.1, 0.1);
 
   // light
   scene.ambient_light = Colour(0.03, 0.03, 0.03);
   auto mat_light = make_shared<LightMat>(Colour(1, 1, 1), 1);
   scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
+  // scene.add(make_shared<Sphere>(Point(278, 554, 278), 50, mat_light));
 
   shared_ptr<Material> red, white, green, mirror;
   if (use_phong) {
     red    = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 10);
     white  = (shared_ptr<Material>) make_shared<Phong>(Colour(.73, .73, .73), 100);
-    green  = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(.12, .45, .15), 10, 0.1);
+    green  = (shared_ptr<Material>) make_shared<Phong>(Colour(.12, .45, .15), 10);
+    // green  = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(.12, .45, .15), 10, 0.1);
     mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
+    // mirror = (shared_ptr<Material>) make_shared<Phong>(Colour(0.8, 0.8, 0.8), 10);
   } else {
     red    = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.65, .05, .05));
     white  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.73, .73, .73));
@@ -95,8 +99,9 @@ void cornell_box(bool use_phong) {
 
   Camera camera(scene);
 
-  camera.image_width = 600;
-  camera.samples_per_pixel = use_phong ? 2 : 10;
+  camera.aspect_ratio = 1;
+  camera.image_width = 400;
+  camera.samples_per_pixel = use_phong ? 2 : 20;
   camera.max_depth = 15;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
@@ -109,6 +114,7 @@ void cornell_box(bool use_phong) {
 // a scene with quads, a mirror, a strong ambient light and a point light
 void quads(bool use_phong) {
   Scene scene;
+  scene.background = Colour(0.1, 0.1, 0.1);
 
   // light
   scene.ambient_light = Colour(0.1, 0.1, 0.1);
@@ -141,7 +147,7 @@ void quads(bool use_phong) {
 
   Camera camera(scene);
 
-  camera.image_width = 800;
+  camera.image_width = 400;
   camera.samples_per_pixel = 10;
   camera.max_depth = 15;
   camera.vfov = 80;
@@ -155,18 +161,19 @@ void quads(bool use_phong) {
 // a scene one spheres of each pathtracing material (diffuse, metal, dielectric) and a point light
 void spheres(bool use_phong) {
   Scene scene;
+  scene.background = Colour(0.1, 0.1, 0.5);
 
   // light
   scene.ambient_light = Colour(0.05, 0.05, 0.05);
-  auto material_light  = make_shared<LightMat>(Colour(1, 1, 0), 1);
+  auto material_light = make_shared<LightMat>(Colour(1, 1, 0.2), 1);
   scene.add(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_light));
 
   shared_ptr<Material> ground, center;
   if (use_phong) {
-    ground = (shared_ptr<Material>) make_shared<Phong>(Colour(0.8, 0.8, 0.0), 100);
+    ground = (shared_ptr<Material>) make_shared<Phong>(Colour(0.5, 0.0, 0.0), 100);
     center = (shared_ptr<Material>) make_shared<Phong>(Colour(0.1, 0.2, 0.5), 100);
   } else {
-    ground = (shared_ptr<Material>) make_shared<Diffuse>(Colour(0.8, 0.8, 0.0));
+    ground = (shared_ptr<Material>) make_shared<Diffuse>(Colour(0.5, 0.0, 0.0));
     center = (shared_ptr<Material>) make_shared<Diffuse>(Colour(0.1, 0.2, 0.5));
   }
   auto mirror = make_shared<Metal>(Colour(0.4, 0.4, 0.4), 0.0);
@@ -176,16 +183,16 @@ void spheres(bool use_phong) {
   scene.add(make_shared<Sphere>(Point( 0.0, -100.5, -2.0), 100.0, ground));
   scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.2), 0.5, center));
   scene.add(make_shared<Sphere>(Point(-1.0,    0.0, -2.0), 0.5, mirror));
-  scene.add(make_shared<Sphere>(Point( 0.3,   -0.1, -0.7), 0.2, glass));
+  scene.add(make_shared<Sphere>(Point( 0.3,   -0.1, -0.5), 0.14, glass));
 
   /////////////////////
 
   Camera camera(scene);
 
   camera.aspect_ratio = 16.0 / 9.0;
-  camera.image_width = 800;
-  camera.samples_per_pixel = 20;
-  camera.max_depth = 15;
+  camera.image_width = 400;
+  camera.samples_per_pixel = 30;
+  camera.max_depth = 20;
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
   camera.look_at = Point(0,0,-1);
@@ -197,11 +204,13 @@ void spheres(bool use_phong) {
 // a scene with a Mesh bunny, strong ambient light and a point Light
 void bunny() {
   Scene scene;
+  scene.background = Colour(0.1, 0.1, 0.1);
 
   // light
   scene.ambient_light = Colour(0.2, 0.2, 0.2);
   auto material_light = make_shared<LightMat>(Colour(1, 1, 0), 2);
-  scene.add(make_shared<Sphere>(Point(0.2, 0.3, 0), 0.01, material_light));
+  scene.add(make_shared<Sphere>(Point(-0.05, 0.15, 0.2), 0.01, material_light));
+  // scene.add(make_shared<Sphere>(Point(-0.05, 0.15, -0.2), 0.01, material_light));
 
   // bunny
   auto bunny_material = make_shared<Phong>(Colour(0.5, 0.5, 0.5), 500);
@@ -212,25 +221,29 @@ void bunny() {
   auto ground = make_shared<Phong>(Colour(0.2, 0.7, 0.0), 10);
   scene.add(make_shared<Sphere>(Point(0, -98, -20), 100, ground));
 
+  // sphere
+  auto mirror = make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 1000, 0.02);
+  scene.add(make_shared<Sphere>(Point(-0.8, 0.5, -0.5), 0.4, mirror));
+
   /////////////////////
 
   Camera camera(scene);
 
-  camera.aspect_ratio = 16.0 / 9.0;
+  camera.aspect_ratio = 16.0/9.0;
   camera.image_width = 400;
-  camera.samples_per_pixel = 1;
-  camera.max_depth = 5;
+  camera.samples_per_pixel = 2;
   camera.vfov = 50.0;
-  camera.look_from = Point(0, 0, 0.3);
-  camera.look_at = Point(0, 0.6, -1);
+  camera.look_from = Point(0, 0, 0.5);
+  camera.look_at = Point(-0.5, 0.6, -1);
 
   utils::clock([&camera]() { camera.render(); });
 }
 
 
 // a scene with Phong spheres, a Metal mirror and a point light
-void mixed() {
+void spheres_and_mirror() {
   Scene scene;
+  scene.background = Colour(0.1, 0.1, 0.1);
 
   // light
   scene.ambient_light = Colour(0.05, 0.05, 0.05);
@@ -266,6 +279,7 @@ void mixed() {
   utils::clock([&camera]() { camera.render(); });
 }
 
+
 int main() {
   switch (1) {
     // phong materials
@@ -280,6 +294,7 @@ int main() {
     case 12: quads(false); break;
 
     // mixed phong and pathtracing materials (experimental)
-    case 20: mixed(); break;
+    case 20: spheres_and_mirror(); break;
+    case 21: spheres(true); break;
   }
 }

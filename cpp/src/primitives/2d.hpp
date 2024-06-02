@@ -1,5 +1,4 @@
-#ifndef PRIMITIVE2D_H
-#define PRIMITIVE2D_H
+#pragma once
 
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
@@ -139,5 +138,3 @@ class Triangle : public Primitive2D {
 
 
 } // namespace raytracer
-
-#endif // PRIMITIVE2D_H

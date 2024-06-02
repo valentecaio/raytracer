@@ -1,5 +1,4 @@
-#ifndef SCENE_H
-#define SCENE_H
+#pragma once
 
 #include "utils/common.hpp"
 #include "utils/interval.hpp"
@@ -53,5 +52,3 @@ class Scene : public Hittable {
 };
 
 } // namespace raytracer
-
-#endif // SCENE_H

@@ -1,5 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
@@ -40,6 +39,7 @@ class Mesh : public Primitive {
         return false;
 
       // if the ray hits any triangle, the hit object is the mesh
+      // this is the bottleneck in this implementation, as it iterates over all triangles
       return triangles.hit(r, ray_t, hit) && (hit.object = shared_from_this());
     }
 
@@ -47,6 +47,28 @@ class Mesh : public Primitive {
     Point get_sample() const override {
       int idx = utils::random_int(0, triangles.objects.size() - 1);
       return triangles.objects[idx]->get_sample();
+    }
+
+
+  private:
+    HittableList triangles;
+    shared_ptr<Box> bbox;   // TODO: replace by a proper BVH
+
+    // compute the bounding box of the mesh
+    void compute_bbox() {
+      Point pmin = Point( infinity,  infinity,  infinity);
+      Point pmax = Point(-infinity, -infinity, -infinity);
+      for (const auto& triangle : triangles.objects) {
+        auto t = *dynamic_cast<Triangle*>(triangle.get());
+        pmin.x = utils::min({pmin.x, t.a.x, t.b.x, t.c.x});
+        pmin.y = utils::min({pmin.y, t.a.y, t.b.y, t.c.y});
+        pmin.z = utils::min({pmin.z, t.a.z, t.b.z, t.c.z});
+        pmax.x = utils::max({pmax.x, t.a.x, t.b.x, t.c.x});
+        pmax.y = utils::max({pmax.y, t.a.y, t.b.y, t.c.y});
+        pmax.z = utils::max({pmax.z, t.a.z, t.b.z, t.c.z});
+      }
+      bbox = make_shared<Box>(pmin, pmax, material);
+      // std::clog << "bbox: " << bbox->pmin.x << " " << bbox->pmin.y << " " << bbox->pmin.z << " " << bbox->pmax.x << " " << bbox->pmax.y << " " << bbox->pmax.z << std::endl;
     }
 
     // load a mesh from an obj file (only simple triangulated meshes supported)
@@ -81,30 +103,6 @@ class Mesh : public Primitive {
       file.close();
       compute_bbox();
     }
-
-
-  private:
-    HittableList triangles;
-    shared_ptr<Box> bbox;   // TODO: replace by a proper BVH
-
-    // compute the bounding box of the mesh
-    void compute_bbox() {
-      Point pmin = Point( infinity,  infinity,  infinity);
-      Point pmax = Point(-infinity, -infinity, -infinity);
-      for (const auto& triangle : triangles.objects) {
-        auto t = *dynamic_cast<Triangle*>(triangle.get());
-        pmin.x = utils::min({pmin.x, t.a.x, t.b.x, t.c.x});
-        pmin.y = utils::min({pmin.y, t.a.y, t.b.y, t.c.y});
-        pmin.z = utils::min({pmin.z, t.a.z, t.b.z, t.c.z});
-        pmax.x = utils::max({pmax.x, t.a.x, t.b.x, t.c.x});
-        pmax.y = utils::max({pmax.y, t.a.y, t.b.y, t.c.y});
-        pmax.z = utils::max({pmax.z, t.a.z, t.b.z, t.c.z});
-      }
-      bbox = make_shared<Box>(pmin, pmax, material);
-      // std::clog << "bbox: " << bbox->pmin.x << " " << bbox->pmin.y << " " << bbox->pmin.z << " " << bbox->pmax.x << " " << bbox->pmax.y << " " << bbox->pmax.z << std::endl;
-    }
 };
 
 } // namespace raytracer
-
-#endif // MESH_H

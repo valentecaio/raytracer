@@ -1,5 +1,4 @@
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#pragma once
 
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
@@ -241,5 +240,3 @@ class Dielectric : public Material {
 
 
 } // namespace raytracer
-
-#endif // MATERIAL_H

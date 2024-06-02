@@ -1,6 +1,4 @@
-#ifndef COMMON_H
-#define COMMON_H
-
+#pragma once
 
 /* INCLUDES */
 #include <iostream>         // std::cout, std::clog, std::flush
@@ -40,5 +38,3 @@ const double infinity = std::numeric_limits<double>::infinity();
 const double pi = 3.1415926535897932385;
 
 } // namespace raytracer
-
-#endif // COMMON_H

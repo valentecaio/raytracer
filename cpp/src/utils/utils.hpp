@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 #include "common.hpp"
 
@@ -110,5 +109,3 @@ void write_image(int image_width, int image_height, std::vector<std::vector<Colo
 
 
 } // namespace raytracer::utils
-
-#endif // UTILS_H

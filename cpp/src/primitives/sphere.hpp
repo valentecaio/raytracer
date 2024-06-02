@@ -1,5 +1,4 @@
-#ifndef SPHERE_H
-#define SPHERE_H
+#pragma once
 
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
@@ -62,5 +61,3 @@ class Sphere : public Primitive {
 };
 
 } // namespace raytracer
-
-#endif // SPHERE_H

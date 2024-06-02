@@ -1,5 +1,4 @@
-#ifndef HITTABLE_H
-#define HITTABLE_H
+#pragma once
 
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
@@ -16,5 +15,3 @@ class Hittable {
 };
 
 } // namespace raytracer
-
-#endif // HITTABLE_H

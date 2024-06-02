@@ -1,5 +1,4 @@
-#ifndef VEC_H
-#define VEC_H
+#pragma once
 
 #include "common.hpp"
 #include "utils.hpp"
@@ -67,5 +66,3 @@ inline void print(const Vec& v) {
 }
 
 } // namespace raytracer::vec
-
-#endif // VEC_H

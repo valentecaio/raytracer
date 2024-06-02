@@ -1,5 +1,4 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
@@ -169,5 +168,3 @@ class Camera {
 };
 
 } // namespace raytracer
-
-#endif // CAMERA_H

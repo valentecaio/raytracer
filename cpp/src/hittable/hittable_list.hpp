@@ -1,5 +1,4 @@
-#ifndef HIT_LIST_H
-#define HIT_LIST_H
+#pragma once
 
 #include "../utils/common.hpp"
 #include "../primitives/primitive.hpp"
@@ -42,5 +41,3 @@ class HittableList : public Hittable {
 };
 
 } // namespace raytracer
-
-#endif // HIT_LIST_H

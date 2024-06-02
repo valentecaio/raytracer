@@ -1,5 +1,4 @@
-#ifndef RAY_H
-#define RAY_H
+#pragma once
 
 #include "utils/common.hpp"
 
@@ -25,5 +24,3 @@ class Ray {
 };
 
 } // namespace raytracer
-
-#endif // RAY_H

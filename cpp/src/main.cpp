@@ -281,7 +281,7 @@ void spheres_and_mirror() {
 
 
 int main() {
-  switch (1) {
+  switch (12) {
     // phong materials
     case 0: phong(); break;
     case 1: cornell_box(true); break;

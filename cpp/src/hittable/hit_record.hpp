@@ -1,5 +1,4 @@
-#ifndef HITRECORD_H
-#define HITRECORD_H
+#pragma once
 
 #include "../utils/common.hpp"
 #include "../ray.hpp"
@@ -27,5 +26,3 @@ class HitRecord {
 };
 
 } // namespace raytracer
-
-#endif // HITRECORD_H

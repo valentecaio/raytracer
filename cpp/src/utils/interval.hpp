@@ -1,5 +1,4 @@
-#ifndef INTERVAL_H
-#define INTERVAL_H
+#pragma once
 
 #include "common.hpp"
 
@@ -24,5 +23,3 @@ const static Interval empty   (+INFINITY, -INFINITY);
 const static Interval universe(-INFINITY, +INFINITY);
 
 } // namespace raytracer
-
-#endif // INTERVAL_H

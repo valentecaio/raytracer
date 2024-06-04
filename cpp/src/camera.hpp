@@ -12,7 +12,7 @@ class Camera {
   public:
     double aspect_ratio = 1.0;      // ratio width/height
     int image_width = 100;          // image width in pixel count
-    int samples_per_pixel = 10;     // random samples for each pixel
+    int samples_per_pixel = 9;      // number of random samples for each pixel, must be a square number for stratified sampling (1, 4, 9, 16, ...)
     int max_depth = 10;             // maximum number of ray bounces into scene
 
     double vfov = 90.0;             // vertical field of view in degrees
@@ -32,11 +32,11 @@ class Camera {
     // render the image row by row, from top to bottom
     void render() {
       initialize();
+      double pixels_sample_scale = 1.0 / samples_per_pixel;
 
     #ifdef OPENMP
       // CPU parallelization
       #pragma omp parallel for schedule(static)
-
     #elif defined(OPENACC)
       // GPU parallelization (experimental)
       auto pixels = std::vector<std::vector<Colour>>(image_height, std::vector<Colour>(image_width));
@@ -51,11 +51,11 @@ class Camera {
       for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {
           auto pixel_colour = Colour(0, 0, 0);
-          for (int sample = 0; sample < samples_per_pixel; ++sample) {
-            Ray r = ray_sample(i, j);
+          for (int sample_idx = 0; sample_idx < samples_per_pixel; ++sample_idx) {
+            Ray r = ray_sample(i, j, sample_idx);
             pixel_colour += trace_ray(r, max_depth);
           }
-          pixels[j][i] = pixel_colour/static_cast<double>(samples_per_pixel);
+          pixels[j][i] = pixel_colour * pixels_sample_scale;
         }
       }
       utils::write_image(image_width, image_height, pixels);
@@ -72,6 +72,7 @@ class Camera {
     Vec defocus_u, defocus_v; // defocus vectors, u is horizontal, v is vertical
     bool initialized = false; // flag to check if the camera has been initialized
     Scene scene;              // scene to render
+    int sqrt_spp;             // square root of samples_per_pixel
 
     std::vector<std::vector<Colour>> pixels; // image pixel data
 
@@ -120,6 +121,9 @@ class Camera {
       defocus_u = u * defocus_radius;
       defocus_v = v * defocus_radius;
 
+      // store square root of samples_per_pixel for stratified sampling
+      sqrt_spp = static_cast<int>(std::sqrt(samples_per_pixel));
+
       // pre-allocate memory for the image
       pixels.resize(image_height);
       for (int j = 0; j < image_height; ++j)
@@ -147,11 +151,12 @@ class Camera {
       return c; // ray was absorbed
     }
 
-    // get a randomly sampled camera ray for the pixel at location i,j
-    Ray ray_sample(int i, int j) const {
+    // get a stratified sampled camera ray for the pixel at location i,j
+    Ray ray_sample(int i, int j, int sample_idx) const {
       // pixel position
       Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);
-      Point pixel_pos = utils::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
+      // Point pixel_pos = utils::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
+      Point pixel_pos = utils::sample_quad_stratified(pixel_upper_left, pixel_delta_u, pixel_delta_v, sample_idx, sqrt_spp);
 
       // ray center
       Point ray_origin = center;

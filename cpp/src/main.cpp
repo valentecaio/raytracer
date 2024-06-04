@@ -45,7 +45,7 @@ void phong() {
 
   camera.aspect_ratio = 16.0/9.0;
   camera.image_width = 400;
-  camera.samples_per_pixel = 20;
+  camera.samples_per_pixel = 16;
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
   camera.look_at = Point(0,0,-1);
@@ -101,7 +101,7 @@ void cornell_box(bool use_phong) {
 
   camera.aspect_ratio = 1;
   camera.image_width = 400;
-  camera.samples_per_pixel = use_phong ? 2 : 20;
+  camera.samples_per_pixel = use_phong ? 4 : 25;
   camera.max_depth = 15;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
@@ -148,7 +148,7 @@ void quads(bool use_phong) {
   Camera camera(scene);
 
   camera.image_width = 400;
-  camera.samples_per_pixel = 10;
+  camera.samples_per_pixel = 9;
   camera.max_depth = 15;
   camera.vfov = 80;
   camera.look_from = Point(0,0,9);
@@ -191,7 +191,7 @@ void spheres(bool use_phong) {
 
   camera.aspect_ratio = 16.0 / 9.0;
   camera.image_width = 400;
-  camera.samples_per_pixel = 30;
+  camera.samples_per_pixel = 25;
   camera.max_depth = 20;
   camera.vfov = 90.0;
   camera.look_from = Point(0,0,0);
@@ -230,8 +230,8 @@ void bunny() {
   Camera camera(scene);
 
   camera.aspect_ratio = 16.0/9.0;
-  camera.image_width = 400;
-  camera.samples_per_pixel = 2;
+  camera.image_width = 300;
+  camera.samples_per_pixel = 4;
   camera.vfov = 50.0;
   camera.look_from = Point(0, 0, 0.5);
   camera.look_at = Point(-0.5, 0.6, -1);

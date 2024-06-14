@@ -95,11 +95,11 @@ class Phong : public Material {
 
             // diffuse
             Vec light_radiance = light_mat->radiance(glm::length(sample - hit.p));
-            double attenuation = std::max(glm::dot(hit.normal, light_dir), 0.0);
+            double attenuation = std::max(glm::dot(hit.normal(), light_dir), 0.0);
             diff += attenuation * light_radiance;
 
             // specular
-            Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hit.normal));
+            Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hit.normal()));
             double RdotV = std::pow(std::max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
             spec += light_radiance * RdotV;
           }
@@ -131,7 +131,7 @@ class PhongMirror : public Phong {
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       // reflection ray
-      Vec reflected = glm::normalize(glm::reflect(r_in.direction(), hit.normal));
+      Vec reflected = glm::normalize(glm::reflect(r_in.direction(), hit.normal()));
       Ray reflect_ray(hit.p, reflected);
 
       // evaluate the reflected ray colour
@@ -146,7 +146,7 @@ class PhongMirror : public Phong {
       }
 
       // reflectance
-      double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal), 1.0);
+      double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal()), 1.0);
       double R = utils::reflectance(cos_theta, refract_idx);
 
       // final colour is a mix of the phong shading and reflected colour
@@ -169,9 +169,10 @@ class Diffuse : public Material {
       out_colour = albedo;
 
       // bounce the ray in a random direction
-      Vec bounce_direction = hit.normal + vec::random_unit();
+      // Vec bounce_direction = hit.normal() + vec::random_unit();
+      Vec bounce_direction = vec::random_unit_hemisphere(hit.normal());
       if (vec::is_near_zero(bounce_direction)) // degenerate direction
-        bounce_direction = hit.normal;
+        bounce_direction = hit.normal();
       out_ray = Ray(hit.p, bounce_direction);
 
       return true;
@@ -194,12 +195,12 @@ class Metal : public Material {
       out_colour = albedo;
 
       // bounce the ray in a fuzzy direction
-      Vec reflected = glm::reflect(r_in.direction(), hit.normal);
+      Vec reflected = glm::reflect(r_in.direction(), hit.normal());
       reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
       out_ray = Ray(hit.p, reflected);
 
       // absorb rays that bounce below the surface
-      return glm::dot(out_ray.direction(), hit.normal) > 0;
+      return glm::dot(out_ray.direction(), hit.normal()) > 0;
     }
 
   private:
@@ -217,16 +218,16 @@ class Dielectric : public Material {
       // dieletric material absorbs nothing
       out_colour = Colour(1, 1, 1);
 
-      double ri = hit.front_face ? (1.0/refract_idx) : refract_idx;
-      double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal), 1.0);
+      double ri = hit.front_face() ? (1.0/refract_idx) : refract_idx;
+      double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal()), 1.0);
       double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
       bool can_refract = ri * sin_theta <= 1.0;
 
       Vec direction;
       if (!can_refract || utils::reflectance(cos_theta, ri) > utils::random())
-        direction = glm::reflect(r_in.direction(), hit.normal);
+        direction = glm::reflect(r_in.direction(), hit.normal());
       else
-        direction = glm::refract(r_in.direction(), hit.normal, ri);
+        direction = glm::refract(r_in.direction(), hit.normal(), ri);
       out_ray = Ray(hit.p, direction);
 
       return true;

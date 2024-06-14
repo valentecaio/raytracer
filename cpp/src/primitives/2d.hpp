@@ -48,7 +48,7 @@ class Primitive2D : public Primitive {
       // HIT !
       hit.t = t;
       hit.p = p;
-      hit.set_face_normal(r, normal);
+      hit.set_normal(r, normal);
       hit.object = shared_from_this();
       return true;
     }

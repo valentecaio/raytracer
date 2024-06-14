@@ -61,7 +61,7 @@ void cornell_box(bool use_phong) {
 
   // light
   scene.ambient_light = Colour(0.03, 0.03, 0.03);
-  auto mat_light = make_shared<LightMat>(Colour(1, 1, 1), 1);
+  auto mat_light = make_shared<LightMat>(Colour(1, 1, 1), 5);
   scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
   // scene.add(make_shared<Sphere>(Point(278, 554, 278), 50, mat_light));
 
@@ -101,8 +101,8 @@ void cornell_box(bool use_phong) {
 
   camera.aspect_ratio = 1;
   camera.image_width = 400;
-  camera.samples_per_pixel = use_phong ? 4 : 25;
-  camera.max_depth = 15;
+  camera.samples_per_pixel = use_phong ? 4 : 9;
+  camera.max_depth = 2;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
   camera.look_at = Point(278, 278, 0);
@@ -281,7 +281,7 @@ void spheres_and_mirror() {
 
 
 int main() {
-  switch (12) {
+  switch (11) {
     // phong materials
     case 0: phong(); break;
     case 1: cornell_box(true); break;

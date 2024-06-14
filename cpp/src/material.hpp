@@ -39,7 +39,7 @@ class LightMat : public Material {
     LightMat(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
-      out_colour = colour;
+      out_colour = radiance(0);
       return false;
     }
 

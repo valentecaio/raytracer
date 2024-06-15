@@ -60,13 +60,13 @@ void cornell_box(bool use_phong) {
   scene.background = Colour(0.1, 0.1, 0.1);
 
   // light
-  scene.ambient_light = Colour(0.03, 0.03, 0.03);
   auto mat_light = make_shared<LightMat>(Colour(1, 1, 1), 5);
   scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
   // scene.add(make_shared<Sphere>(Point(278, 554, 278), 50, mat_light));
 
   shared_ptr<Material> red, white, green, mirror;
   if (use_phong) {
+    scene.ambient_light = Colour(0.03, 0.03, 0.03);
     red    = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 10);
     white  = (shared_ptr<Material>) make_shared<Phong>(Colour(.73, .73, .73), 100);
     green  = (shared_ptr<Material>) make_shared<Phong>(Colour(.12, .45, .15), 10);
@@ -74,11 +74,12 @@ void cornell_box(bool use_phong) {
     mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
     // mirror = (shared_ptr<Material>) make_shared<Phong>(Colour(0.8, 0.8, 0.8), 10);
   } else {
+    scene.ambient_light = Colour(0.15, 0.15, 0.15); // scene is too dark
     red    = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.65, .05, .05));
     white  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.73, .73, .73));
-    green  = (shared_ptr<Material>) make_shared<Metal>(Colour(.12, .45, .15), 0.3);
-    mirror = (shared_ptr<Material>) make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
-    scene.ambient_light = Colour(0.3, 0.3, 0.3); // scene is too dark
+    // green  = (shared_ptr<Material>) make_shared<Metal>(Colour(.12, .45, .15), 0.3);
+    // mirror = (shared_ptr<Material>) make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
+    green  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.12, .45, .15));
   }
 
   // walls
@@ -93,7 +94,7 @@ void cornell_box(bool use_phong) {
   scene.add(make_shared<Box>(Point(265, 0, 295), Point(430, 330, 460), white));
 
   // sphere
-  scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, mirror));
+  // scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, mirror));
 
   /////////////////////
 
@@ -102,7 +103,7 @@ void cornell_box(bool use_phong) {
   camera.aspect_ratio = 1;
   camera.image_width = 400;
   camera.samples_per_pixel = use_phong ? 4 : 9;
-  camera.max_depth = 2;
+  camera.max_depth = 4;
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
   camera.look_at = Point(278, 278, 0);

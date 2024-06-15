@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../utils/common.hpp"
+#include "../utils/vec.hpp"
 #include "../utils/interval.hpp"
 #include "../hittable/hit_record.hpp"
 #include "../material.hpp"
@@ -58,6 +59,7 @@ class Primitive2D : public Primitive {
   protected:
     Point origin; // origin point of the primitive, in the plane
     Vec u, v;     // two vectors that define the plane where the primitive lies
+    double area;  // area of the primitive in the plane
 
     // should be called by the constructor of the derived class
     // after setting the origin, u and v fields
@@ -96,6 +98,7 @@ class Quad : public Primitive2D {
       origin = _origin;
       u = _u;
       v = _v;
+      area = glm::length(glm::cross(u, v));
       set_constants();
     }
 
@@ -103,6 +106,19 @@ class Quad : public Primitive2D {
       return utils::sample_quad(origin, u, v);
     }
 
+    double pdf_value(const Ray& r) const override {
+      HitRecord hit;
+      if (!this->hit(r, Interval(0.001, infinity), hit))
+        return 0;
+
+      double distance_squared = hit.t * hit.t * vec::length_squared(r.direction());
+      double cosine = fabs(glm::dot(r.direction(), hit.normal()) / glm::length(r.direction()));
+
+      // std::clog << "distance_squared: " << distance_squared << std::endl;
+      // std::clog << "cosine: " << cosine << std::endl;
+      // std::clog << "area: " << area << std::endl;
+      return distance_squared / (cosine * area);
+    }
 
   private:
     bool is_hit(double alpha, double beta) const {
@@ -123,6 +139,7 @@ class Triangle : public Primitive2D {
       origin = a;
       u = b - a;
       v = c - a;
+      area = glm::length(glm::cross(u, v)) / 2.0;
       set_constants();
     }
 

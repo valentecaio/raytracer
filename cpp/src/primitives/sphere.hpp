@@ -45,8 +45,8 @@ class Sphere : public Primitive {
       hit.t = root;
       hit.p = r.at(hit.t);
       hit.object = shared_from_this();
-      Vec outward_normal = (hit.p-center)/radius;  // normalized outward normal
-      hit.set_face_normal(r, outward_normal);      // store the face orientation
+      Vec outward_normal = (hit.p-center)/radius; // normalized outward normal
+      hit.set_normal(r, outward_normal);          // store the face orientation
       return true;
     }
 

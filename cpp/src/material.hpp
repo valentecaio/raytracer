@@ -26,6 +26,14 @@ class Material {
     virtual bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const {
       return false;
     }
+
+    // returns the cosine-weighted PDF of the material for a given ray direction
+    virtual double scattering_pdf(const Ray& r_in, const HitRecord& rec, const Ray& scattered) const {
+      return 0;
+    }
+
+    // returns true if the material emits light, false otherwise
+    virtual bool is_emissive() const { return false; }
 };
 
 
@@ -49,6 +57,9 @@ class LightMat : public Material {
       // return colour * intensity / (t*t); // TODO
       return colour * intensity;
     }
+
+    // light sources are emissive
+    bool is_emissive() const override { return true; }
 };
 
 
@@ -169,14 +180,18 @@ class Diffuse : public Material {
     bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
       out_colour = albedo;
 
-      // bounce the ray in a random direction
-      // Vec bounce_direction = hit.normal() + vec::random_unit();
-      Vec bounce_direction = vec::random_unit_hemisphere(hit.normal());
-      if (vec::is_near_zero(bounce_direction)) // degenerate direction
-        bounce_direction = hit.normal();
+      Vec bounce_direction = vec::random_hemisphere_cosine(hit.normal());
       out_ray = Ray(hit.p, bounce_direction);
+      // pdf = glm::dot(hit.normal(), out_ray.direction()) / M_PI;
 
       return true;
+    }
+
+    // scattering PDF for cosine sampling is cos(theta) / pi
+    double scattering_pdf(const Ray& r_in, const HitRecord& hit, const Ray& scattered) const {
+      // return 1 / (4*M_PI);
+      double cosine = glm::dot(hit.normal(), scattered.direction());
+      return (cosine <= 0) ? 0 : cosine / M_PI;
     }
 
   private:
@@ -197,7 +212,7 @@ class Metal : public Material {
 
       // bounce the ray in a fuzzy direction
       Vec reflected = glm::reflect(r_in.direction(), hit.normal());
-      reflected = glm::normalize(reflected) + (fuzz*vec::random_unit());
+      reflected = glm::normalize(reflected) + (fuzz*vec::random_sphere_uniform());
       out_ray = Ray(hit.p, reflected);
 
       // absorb rays that bounce below the surface

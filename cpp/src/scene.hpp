@@ -12,7 +12,7 @@ class LightMat;
 // A hittable scene in 3D space.
 class Scene : public Hittable {
   public:
-    Colour ambient_light = Colour(0, 0, 0); // scene ambient light colour
+    Colour ambient_light = Colour(0, 0, 0); // scene ambient light colour, used in Phong
     Colour background = Colour(0, 0, 0);    // scene background colour
     HittableList primitives;                // scene geometric instanced objects
     HittableList lights;                    // light sources

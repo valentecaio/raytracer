@@ -104,10 +104,15 @@ inline double linear_to_gamma(double linear_component) {
   return (linear_component > 0) ? std::sqrt(linear_component) : 0;
 }
 
-void write_pixel(std::ostream &out, Colour pixel_colour) {
-  out << static_cast<int>(255.999 * linear_to_gamma(pixel_colour.r)) << ' '
-      << static_cast<int>(255.999 * linear_to_gamma(pixel_colour.g)) << ' '
-      << static_cast<int>(255.999 * linear_to_gamma(pixel_colour.b)) << '\n';
+void write_pixel(std::ostream &out, Colour pixel) {
+  // fix NaN values
+  if (pixel.r != pixel.r) pixel.r = 0;
+  if (pixel.g != pixel.g) pixel.g = 0;
+  if (pixel.b != pixel.b) pixel.b = 0;
+
+  out << static_cast<int>(255.999 * linear_to_gamma(pixel.r)) << ' '
+      << static_cast<int>(255.999 * linear_to_gamma(pixel.g)) << ' '
+      << static_cast<int>(255.999 * linear_to_gamma(pixel.b)) << '\n';
 }
 
 void write_image(int image_width, int image_height, std::vector<std::vector<Colour>>& pixels) {

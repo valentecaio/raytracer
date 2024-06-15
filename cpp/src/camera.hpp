@@ -2,7 +2,6 @@
 
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
-#include "pdf/cosine_pdf.hpp"
 // #include "pdf/primitive_pdf.hpp"
 // #include "primitives/2d.hpp"
 #include "scene.hpp"
@@ -148,11 +147,10 @@ class Camera {
 
       // HIT //
 
-      Colour c;
-      Ray r_out;
-      if (hit.object->material->evaluate(scene, r_in, hit, c, r_out))
-        return c * trace_ray(r_out, depth-1); // ray bounced
-      return c; // ray was absorbed
+      EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
+      if (eval.bounced)
+        return eval.colour * trace_ray(eval.ray, depth-1);
+      return eval.colour; // ray was absorbed
     }
 
     Colour trace_ray_monte_carlo(const Ray& r_in, int depth) const {
@@ -167,40 +165,26 @@ class Camera {
 
       // HIT //
 
-      // temp variables
-      auto c = Colour(0,0,0);
-      Ray r_scattered;
-
       // light source
       if (hit.object->material->is_emissive()) {
         // we only count direct light sources at the first hit
-        if (depth == max_depth)
-          hit.object->material->evaluate(scene, r_in, hit, c, r_scattered);
-        return c;
+        if (depth == max_depth) {
+          EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
+          return eval.colour;
+        } else {
+          return Colour(0,0,0);
+        }
       }
 
       // path tracing
-      if (hit.object->material->evaluate(scene, r_in, hit, c, r_scattered)) {
-        // get a random direction from the surface and calculate the associated PDF
-        CosinePdf surface_pdf(hit.normal());
-        r_scattered = Ray(hit.p, surface_pdf.generate());
-        double pdf_value = surface_pdf.value(r_scattered.direction());
-
-        // TODO: not working
-        // only one light source for now
-        // const auto& light = scene.lights.objects[0];
-        // auto light_pdf = PrimitivePdf(*light, hit.p);
-        // r_scattered = Ray(hit.p, light_pdf.generate());
-        // pdf_value = light_pdf.value(r_scattered.direction());
-        // std::clog << "light_pdf  : " << pdf_value << std::endl;
-
-        double scattering_pdf = hit.object->material->scattering_pdf(r_in, hit, r_scattered);
-
-        return c * scattering_pdf * trace_ray_monte_carlo(r_scattered, depth-1) / pdf_value;
+      EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
+      if (eval.bounced) {
+        double scattering_pdf = hit.object->material->scattering_pdf(r_in, hit, eval.ray);
+        return eval.colour * scattering_pdf * trace_ray_monte_carlo(eval.ray, depth-1) / eval.pdf;
       }
 
-      // phong shading
-      return c;
+      // ray was absorbed by the material
+      return eval.colour;
     }
 
     // get a stratified sampled camera ray for the pixel at location i,j

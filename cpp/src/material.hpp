@@ -3,6 +3,7 @@
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
 #include "utils/vec.hpp"
+#include "pdf/cosine_pdf.hpp"
 #include "scene.hpp"
 #include "ray.hpp"
 
@@ -13,22 +14,32 @@ class HitRecord;
 class Sphere;
 
 
+// A record that contains the result of evaluating a material at a hit point.
+class EvalRecord {
+  public:
+    Colour colour; // colour of the material at the hit point
+    Ray ray;       // new ray to cast, if any
+    double pdf;    // probability density function ponderation for the new ray
+    bool bounced;  // true if the ray was scattered, false if it was absorbed
+};
+
+
+
 // Abstract class that represents a material that can be applied to objects in the scene.
 class Material {
   public:
-    // constructors and destructors
     Material() = default;
     virtual ~Material() = default;
 
-    // returns true if the a new ray should be cast, false otherwise
-    // out_colour is filled with the colour of the material at the hit point
-    // out_ray is filled with the new ray to cast, if any
-    virtual bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const {
-      return false;
+    // Evaluate a material at a hit point, returning the colour of the material,
+    // a boolean indicating if a new ray should be cast, the new ray to cast
+    // and the probability density function ponderation for the new ray.
+    virtual EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const {
+      return EvalRecord{Colour(0,0,0), Ray(), 0, false};
     }
 
-    // returns the cosine-weighted PDF of the material for a given ray direction
-    virtual double scattering_pdf(const Ray& r_in, const HitRecord& rec, const Ray& scattered) const {
+    // returns the PDF of the material for a given ray direction
+    virtual double scattering_pdf(const Ray& r_in, const HitRecord& rec, const Ray& r_out) const {
       return 0;
     }
 
@@ -46,10 +57,13 @@ class LightMat : public Material {
 
     LightMat(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
-      out_colour = hit.front_face() ? radiance(0) : Colour(0,0,0);
-      // out_colour = radiance(0);
-      return false;
+    EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
+      return EvalRecord{
+        hit.front_face() ? radiance(0) : Colour(0,0,0),
+        Ray(),
+        0,
+        false
+      };
     }
 
     // calculate the radiance of the light at a given distance
@@ -73,9 +87,13 @@ class Phong : public Material {
     Phong(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks)
       : albedo(_albedo), shininess(_shininess), ka(_ka), kd(_kd), ks(_ks) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
-      out_colour = phong_shade(r_in, hit, scene);
-      return false;
+    EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
+      return EvalRecord{
+        phong_shade(r_in, hit, scene),
+        Ray(),
+        0,
+        false
+      };
     }
 
   protected:
@@ -141,7 +159,7 @@ class PhongMirror : public Phong {
     PhongMirror(const Colour& _albedo, double _shininess, double _ka, double _kd, double _ks, double _refract_idx)
       : Phong(_albedo, _shininess, _ka, _kd, _ks), refract_idx(_refract_idx) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
+    EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
       // reflection ray
       Vec reflected = glm::normalize(glm::reflect(r_in.direction(), hit.normal()));
       Ray reflect_ray(hit.p, reflected);
@@ -151,7 +169,8 @@ class PhongMirror : public Phong {
       Colour reflect_colour;
       if (scene.hit(reflect_ray, Interval(0.0001, infinity), reflect_hit)) {
         // hit, evaluate the material
-        reflect_hit.object->material->evaluate(scene, reflect_ray, reflect_hit, reflect_colour, out_ray);
+        EvalRecord reflect_eval = reflect_hit.object->material->evaluate(scene, reflect_ray, reflect_hit);
+        reflect_colour = reflect_eval.colour;
       } else {
         // miss, use scene background colour
         reflect_colour = scene.background;
@@ -162,8 +181,12 @@ class PhongMirror : public Phong {
       double R = utils::reflectance(cos_theta, refract_idx);
 
       // final colour is a mix of the phong shading and reflected colour
-      out_colour = (1-R)*phong_shade(r_in, hit, scene) + R*reflect_colour;
-      return false;
+      return EvalRecord{
+        (1-R)*phong_shade(r_in, hit, scene) + R*reflect_colour,
+        Ray(),
+        0,
+        false
+      };
     }
 
   private:
@@ -177,20 +200,37 @@ class Diffuse : public Material {
   public:
     Diffuse(const Colour& _albedo) : albedo(_albedo) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
-      out_colour = albedo;
+    EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
+      // get a random direction from the surface and calculate the associated PDF
+      CosinePdf surface_pdf(hit.normal());
+      Ray out_ray = Ray(hit.p, surface_pdf.generate());
+      double pdf = surface_pdf.value(out_ray.direction());
 
-      Vec bounce_direction = vec::random_hemisphere_cosine(hit.normal());
-      out_ray = Ray(hit.p, bounce_direction);
+      // Vec bounce_direction = vec::random_hemisphere_cosine(hit.normal());
+      // Ray out_ray = Ray(hit.p, bounce_direction);
       // pdf = glm::dot(hit.normal(), out_ray.direction()) / M_PI;
 
-      return true;
+      // TODO: not working
+      // only one light source for now
+      // const auto& light = scene.lights.objects[0];
+      // auto light_pdf = PrimitivePdf(*light, hit.p);
+      // r_scattered = Ray(hit.p, light_pdf.generate());
+      // pdf_value = light_pdf.value(r_scattered.direction());
+      // std::clog << "light_pdf  : " << pdf_value << std::endl;
+
+      return EvalRecord{
+        albedo,
+        out_ray,
+        pdf,
+        true
+      };
     }
 
-    // scattering PDF for cosine sampling is cos(theta) / pi
-    double scattering_pdf(const Ray& r_in, const HitRecord& hit, const Ray& scattered) const {
+    // diffuse scattering PDF for cosine sampling: cos(theta) / pi
+    double scattering_pdf(const Ray& r_in, const HitRecord& hit, const Ray& r_out) const {
       // return 1 / (4*M_PI);
-      double cosine = glm::dot(hit.normal(), scattered.direction());
+      // return 1/M_PI;
+      double cosine = glm::dot(hit.normal(), r_out.direction());
       return (cosine <= 0) ? 0 : cosine / M_PI;
     }
 
@@ -207,16 +247,18 @@ class Metal : public Material {
     Metal(const Colour& _albedo, double _fuzz)
      : albedo(_albedo), fuzz(std::min(_fuzz, 1.0)) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
-      out_colour = albedo;
-
+    EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
       // bounce the ray in a fuzzy direction
       Vec reflected = glm::reflect(r_in.direction(), hit.normal());
       reflected = glm::normalize(reflected) + (fuzz*vec::random_sphere_uniform());
-      out_ray = Ray(hit.p, reflected);
+      Ray out_ray = Ray(hit.p, reflected);
 
-      // absorb rays that bounce below the surface
-      return glm::dot(out_ray.direction(), hit.normal()) > 0;
+      return EvalRecord{
+        albedo,
+        out_ray,
+        0, // TODO
+        glm::dot(out_ray.direction(), hit.normal()) > 0 // absorb rays that bounce below the surface
+      };
     }
 
   private:
@@ -230,10 +272,7 @@ class Dielectric : public Material {
   public:
     Dielectric(double _refract_idx) : refract_idx(_refract_idx) {}
 
-    bool evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit, Colour& out_colour, Ray& out_ray) const override {
-      // dieletric material absorbs nothing
-      out_colour = Colour(1, 1, 1);
-
+    EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
       double ri = hit.front_face() ? (1.0/refract_idx) : refract_idx;
       double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal()), 1.0);
       double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
@@ -244,9 +283,13 @@ class Dielectric : public Material {
         direction = glm::reflect(r_in.direction(), hit.normal());
       else
         direction = glm::refract(r_in.direction(), hit.normal(), ri);
-      out_ray = Ray(hit.p, direction);
 
-      return true;
+      return EvalRecord{
+        Colour(1, 1, 1), // dieletric material absorbs nothing
+        Ray(hit.p, direction),
+        0, // TODO
+        true
+      };
     }
 
   private:

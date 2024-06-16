@@ -1,6 +1,7 @@
 // main.cpp
 
 #include "utils/common.hpp"
+#include "utils/utils.hpp"
 #include "primitives/2d.hpp"
 #include "primitives/box.hpp"
 #include "primitives/mesh.hpp"
@@ -103,8 +104,8 @@ void cornell_box(bool use_phong) {
   camera.aspect_ratio = 1;
   camera.image_width = 400;
   camera.samples_per_pixel = use_phong ? 4 : 9;
-  camera.max_depth = 10;
-  // camera.russian_roulette = false;
+  camera.max_depth = 100;
+  // camera.russian_roulette = false; // for tests
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
   camera.look_at = Point(278, 278, 0);

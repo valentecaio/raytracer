@@ -4,6 +4,7 @@
 #include "../utils/interval.hpp"
 #include "../utils/utils.hpp"
 #include "../hittable/hit_record.hpp"
+#include "../pdf/pdf_sample.hpp"
 #include "../material.hpp"
 #include "primitive.hpp"
 #include "2d.hpp"
@@ -44,9 +45,16 @@ class Mesh : public Primitive {
     }
 
     // returns a random point in one of the triangles
-    Point get_sample() const override {
-      int idx = utils::random_int(0, triangles.objects.size() - 1);
-      return triangles.objects[idx]->get_sample();
+    // TODO: this is not uniform
+    Point sample() const override {
+      return Point(0, 0, 0); // TODO
+      // int idx = random::rand_int(0, triangles.objects.size() - 1);
+      // return triangles.objects[idx]->sample();
+    }
+
+    // TODO
+    PdfSample pdf_sample() const override {
+      return PdfSample();
     }
 
 

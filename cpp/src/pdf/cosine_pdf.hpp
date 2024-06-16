@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../utils/common.hpp"
-#include "../utils/vec.hpp"
+#include "../utils/random.hpp"
 #include "pdf.hpp"
 
 namespace raytracer {
@@ -20,7 +20,7 @@ class CosinePdf : public Pdf {
 
     // generate a random direction cosine-weighted in the hemisphere around direction dir
     Vec generate() const override {
-      return vec::random_hemisphere_cosine(max_direction);
+      return random::sample_hemisphere_cosine(max_direction);
     }
 
   private:

@@ -48,9 +48,16 @@ class Box : public Primitive {
     }
 
     // returns a random point in one of the 6 box faces
-    Point get_sample() const override {
-      int idx = utils::random_int(0, 5);
-      return faces.objects[idx].get()->get_sample();
+    // TODO: this is not uniform
+    Point sample() const override {
+      return Point(0, 0, 0); // TODO
+      // int idx = random::rand_int(0, 5);
+      // return faces.objects[idx].get()->sample();
+    }
+
+    // TODO
+    PdfSample pdf_sample() const override {
+      return PdfSample();
     }
 
   private:

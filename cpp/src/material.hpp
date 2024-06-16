@@ -2,7 +2,7 @@
 
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
-#include "utils/vec.hpp"
+#include "utils/random.hpp"
 #include "pdf/cosine_pdf.hpp"
 #include "scene.hpp"
 #include "ray.hpp"
@@ -20,7 +20,8 @@ class EvalRecord {
     Colour colour; // evaluated colour of the material at the hit point
     bool bounced;  // true if a new ray should be cast, false if light was absorbed
     Ray ray;       // new ray to cast, if bounced is true
-    double pdf;    // probability density function ponderation for the new ray
+    double pdf;    // Probability Density Function (PDF) ponderation for the new ray
+    double brdf_f; // Bidirectional Reflectance Distribution Function (BRDF) ponderation
 };
 
 
@@ -35,11 +36,11 @@ class Material {
     // a boolean indicating if a new ray should be cast, the new ray to cast
     // and the probability density function ponderation for the new ray.
     virtual EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const {
-      return EvalRecord{Colour(0,0,0), false, Ray(), 0};
+      return EvalRecord{Colour(0,0,0), false, Ray(), 0, 0};
     }
 
-    // Bidirectional Reflectance Distribution Function (BRDF)
-    virtual double brdf(const Ray& r_in, const Ray& r_out) const {
+    // Bidirectional Reflectance Distribution Function (BRDF) ponderation for the material
+    virtual double brdf_factor(const Ray& r_in, const Ray& r_out) const {
       return 0;
     }
 
@@ -63,11 +64,12 @@ class LightMat : public Material {
         false,
         Ray(),
         0,
+        0,
       };
     }
 
     // calculate the radiance of the light at a given distance
-    Vec radiance(double t) const {
+    Colour radiance(double t) const {
       // return colour * intensity / (t*t); // TODO
       return colour * intensity;
     }
@@ -93,6 +95,7 @@ class Phong : public Material {
         false,
         Ray(),
         0,
+        0,
       };
     }
 
@@ -114,7 +117,7 @@ class Phong : public Material {
         // point lights are sampled once, area lights are sampled multiple times
         int nsamples = (std::dynamic_pointer_cast<Sphere>(light)) ? 1 : 10;
         for (int i = 0; i < nsamples; i++) {
-          Point sample = light->get_sample();
+          Point sample = light->sample();
           Vec light_dir = glm::normalize(sample - hit.p);
 
           auto shadow_ray = Ray(hit.p, light_dir);
@@ -186,6 +189,7 @@ class PhongMirror : public Phong {
         false,
         Ray(),
         0,
+        0,
       };
     }
 
@@ -205,11 +209,17 @@ class Diffuse : public Material {
       CosinePdf surface_pdf(hit.normal());
       Ray out_ray = Ray(hit.p, surface_pdf.generate());
       double pdf = surface_pdf.value(out_ray.direction());
-      return EvalRecord{albedo, true, out_ray, pdf};
+      return EvalRecord{
+        albedo,
+        true,
+        out_ray,
+        pdf,
+        brdf_factor(r_in, out_ray)
+      };
     }
 
     // BRDF for Lambertian material: 1/pi
-    double brdf(const Ray& r_in, const Ray& r_out) const {
+    double brdf_factor(const Ray& r_in, const Ray& r_out) const override {
       return M_1_PI;
     }
 
@@ -229,13 +239,13 @@ class Metal : public Material {
     EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
       // bounce the ray in a fuzzy direction
       Vec reflected = glm::reflect(r_in.direction(), hit.normal());
-      reflected = glm::normalize(reflected) + (fuzz*vec::random_sphere_uniform());
+      reflected = glm::normalize(reflected) + (fuzz*random::sample_sphere_uniform());
       Ray out_ray = Ray(hit.p, reflected);
 
       // absorb rays that bounce below the surface
       bool bounced = glm::dot(out_ray.direction(), hit.normal()) > 0;
 
-      return EvalRecord{albedo, bounced, out_ray, 0}; // TODO: pdf
+      return EvalRecord{albedo, bounced, out_ray, 0, 0}; // TODO: pdf, brdf
     }
 
   private:
@@ -256,7 +266,7 @@ class Dielectric : public Material {
       bool can_refract = ri * sin_theta <= 1.0;
 
       Vec direction;
-      if (!can_refract || utils::reflectance(cos_theta, ri) > utils::random())
+      if (!can_refract || utils::reflectance(cos_theta, ri) > random::rand())
         direction = glm::reflect(r_in.direction(), hit.normal());
       else
         direction = glm::refract(r_in.direction(), hit.normal(), ri);
@@ -266,6 +276,7 @@ class Dielectric : public Material {
         true,
         Ray(hit.p, direction),
         0, // TODO
+        0,
       };
     }
 

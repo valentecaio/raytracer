@@ -2,7 +2,9 @@
 
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
+#include "../utils/random.hpp"
 #include "../hittable/hit_record.hpp"
+#include "../pdf/pdf_sample.hpp"
 #include "../material.hpp"
 #include "primitive.hpp"
 
@@ -54,9 +56,17 @@ class Sphere : public Primitive {
       return true;
     }
 
-    // By now, sphere lights are point lights.
-    Point get_sample() const override {
-      return center; // TODO: random point on the sphere
+    Point sample() const override {
+      return random::sample_sphere_uniform(center, radius);
+    }
+
+    PdfSample pdf_sample() const override {
+      Point s = sample();
+      return PdfSample{
+        s,
+        (s - center) / radius,
+        1.0 / area,
+      };
     }
 
   private:

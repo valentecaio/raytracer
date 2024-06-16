@@ -54,6 +54,16 @@ class Primitive2D : public Primitive {
       return true;
     }
 
+    // returns a random point in the 2D primitive
+    // sample(), normal and area should be defined by the derived class
+    PdfSample pdf_sample() const override {
+      return PdfSample{
+        sample(),
+        normal,
+        1.0 / area,
+      };
+    }
+
 
   // the following members must be defined at the constructor of the derived class
   protected:
@@ -101,22 +111,8 @@ class Quad : public Primitive2D {
       set_constants();
     }
 
-    Point get_sample() const override {
-      return utils::sample_quad(origin, u, v);
-    }
-
-    double pdf_value(const Ray& r) const override {
-      HitRecord hit;
-      if (!this->hit(r, Interval(0.001, infinity), hit))
-        return 0;
-
-      double distance_squared = hit.t * hit.t * vec::length_squared(r.direction());
-      double cosine = fabs(glm::dot(r.direction(), hit.normal()) / glm::length(r.direction()));
-
-      // std::clog << "distance_squared: " << distance_squared << std::endl;
-      // std::clog << "cosine: " << cosine << std::endl;
-      // std::clog << "area: " << area << std::endl;
-      return distance_squared / (cosine * area);
+    Point sample() const override {
+      return random::sample_quad(origin, u, v);
     }
 
   private:
@@ -142,8 +138,8 @@ class Triangle : public Primitive2D {
       set_constants();
     }
 
-    Point get_sample() const override {
-      return utils::sample_triangle(origin, u, v);
+    Point sample() const override {
+      return random::sample_triangle(origin, u, v);
     }
 
   private:

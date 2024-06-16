@@ -2,6 +2,7 @@
 
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
+#include "utils/random.hpp"
 // #include "pdf/primitive_pdf.hpp"
 // #include "primitives/2d.hpp"
 #include "scene.hpp"
@@ -57,8 +58,9 @@ class Camera {
           auto pixel_colour = Colour(0, 0, 0);
           for (int sample_idx = 0; sample_idx < samples_per_pixel; ++sample_idx) {
             Ray r = ray_sample(i, j, sample_idx);
-            // pixel_colour += trace_ray(r);
-            pixel_colour += trace_ray_monte_carlo(r);
+            // pixel_colour += ray_trace(r);
+            // pixel_colour += path_trace(r);
+            pixel_colour += path_trace_walds(r);
           }
           pixels[j][i] = pixel_colour * pixels_sample_scale;
         }
@@ -136,7 +138,7 @@ class Camera {
     }
 
     // returns the colour of the ray after it hits the scene
-    Colour trace_ray(const Ray& r_in, int depth = 0) const {
+    Colour ray_trace(const Ray& r_in, int depth = 0) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth >= max_depth)
         return Colour(0,0,0);
@@ -151,11 +153,11 @@ class Camera {
 
       EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
       if (eval.bounced)
-        return eval.colour * trace_ray(eval.ray, depth+1);
+        return eval.colour * ray_trace(eval.ray, depth+1);
       return eval.colour; // ray was absorbed
     }
 
-    Colour trace_ray_monte_carlo(const Ray& r_in, int depth = 0) const {
+    Colour path_trace(const Ray& r_in, int depth = 0) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth >= max_depth)
         return Colour(0,0,0);
@@ -180,7 +182,7 @@ class Camera {
       if (russian_roulette && depth >= min_depth) {
         // p is the continuation probability
         double p = utils::max({eval.colour.r, eval.colour.g, eval.colour.b});
-        if (utils::random() > p)
+        if (random::rand() > p)
           return Colour(0,0,0);
         // divide colour by p so that paths with higher prob of continuation are not overestimated
         eval.colour /= p;
@@ -192,34 +194,85 @@ class Camera {
         double attenuation = std::max(0.0, glm::dot(hit.normal(), eval.ray.direction()));
 
         // each material has a BRDF that defines how light is reflected
-        double brdf = hit.object->material->brdf(r_in, eval.ray);
+        Colour brdf = eval.colour * eval.brdf_f;
 
         // speed up: end paths that already have a very low contribution
-        if (vec::is_near_zero(eval.colour) || brdf < NEAR_ZERO || attenuation < NEAR_ZERO)
+        if (vec::is_near_zero(eval.colour) || vec::is_near_zero(brdf) || attenuation < NEAR_ZERO)
           return Colour(0,0,0);
 
         // trace new ray
-        // return eval.colour * brdf * attenuation * trace_ray_monte_carlo(eval.ray, depth+1) / eval.pdf;
-        return eval.colour * trace_ray_monte_carlo(eval.ray, depth+1);
+        // return brdf * attenuation * path_trace(eval.ray, depth+1) / eval.pdf;
+        return eval.colour * path_trace(eval.ray, depth+1);
       }
 
       // ray was absorbed by the material
       return eval.colour;
     }
 
+    Colour path_trace_walds(Ray& r_in, int depth = 0) const {
+      auto L = Colour(0,0,0);
+      auto beta = Colour(1,1,1);
+      for (int i = 0; i < max_depth; ++i) {
+        // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
+        HitRecord hit;
+        if (!scene.hit(r_in, Interval(0.0001, infinity), hit))
+          return L + beta * scene.background;
+          // return L;
+
+        // HIT //
+
+        // evaluate the material at the hit point
+        EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
+
+        if (hit.object->material->is_emissive()) {
+          // we only count direct light sources at the first hit
+          return (i==0) ? eval.colour : L;
+        }
+
+        // russian roulette
+        if (russian_roulette && i >= min_depth) {
+          // p is the continuation probability
+          double p = utils::max({eval.colour.r, eval.colour.g, eval.colour.b});
+          if (random::rand() > p)
+            return L;
+          // divide colour by p so that paths with higher prob of continuation are not overestimated
+          eval.colour /= p;
+        }
+
+        // ray bounced
+        if (eval.bounced) {
+          double attenuation = std::max(0.0, glm::dot(hit.normal(), eval.ray.direction()));
+          Colour brdf = eval.colour * eval.brdf_f;
+
+          // Colour Le = scene.get_light_radiance(hit);
+          Colour Le = Colour(1,1,1);
+          L += Le * beta * brdf;
+
+          // next path segment
+          beta *= brdf * attenuation / eval.pdf;
+          r_in = eval.ray;
+        } else {
+          // ray was absorbed by the material
+          return L;
+        }
+      }
+      return L;
+    }
+
+
     // get a stratified sampled camera ray for the pixel at location i,j
     // sample_idx is the index of the sample in the pixel, used to stratify the samples
     Ray ray_sample(int i, int j, int sample_idx) const {
       // pixel position
       Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);
-      // Point pixel_pos = utils::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
-      Point pixel_pos = utils::sample_quad_stratified(pixel_upper_left, pixel_delta_u, pixel_delta_v, sample_idx, sqrt_spp);
+      // Point pixel_pos = random::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
+      Point pixel_pos = random::sample_quad_stratified(pixel_upper_left, pixel_delta_u, pixel_delta_v, sample_idx, sqrt_spp);
 
       // ray center
       Point ray_origin = center;
       if (defocus_angle > 0) {
         // if defocus is enabled, the ray origin is a random point in the camera defocus disk
-        Point p = utils::sample_disk(1);
+        Point p = random::sample_disk(1);
         ray_origin += (p.x * defocus_u) + (p.y * defocus_v);
       }
 

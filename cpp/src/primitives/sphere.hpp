@@ -12,7 +12,11 @@ namespace raytracer {
 class Sphere : public Primitive {
   public:
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
-      : center(_center), radius(std::max(0.0, _radius)) { material = _material; }
+      : center(_center), radius(std::max(0.0, _radius)) {
+      // primitive properties
+      material = _material;
+      area = 4*M_PI*radius*radius;
+    }
 
     // Solves the quadratic equation for the ray-sphere intersection,
     // and returns the nearest intersection point within the acceptable range.

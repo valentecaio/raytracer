@@ -167,35 +167,40 @@ class Camera {
 
       // HIT //
 
+      // evaluate the material at the hit point
+      EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
+
       // light source
       if (hit.object->material->is_emissive()) {
         // we only count direct light sources at the first hit
-        if (depth == 0) {
-          EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
-          return eval.colour;
-        } else {
-          return Colour(0,0,0);
-        }
+        return (depth == 0) ? eval.colour : Colour(0,0,0);
       }
 
-      // not light, evaluate the material
-      EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
-
       // russian roulette
-      if (russian_roulette && (depth >= min_depth)) {
+      if (russian_roulette && depth >= min_depth) {
         // p is the continuation probability
         double p = utils::max({eval.colour.r, eval.colour.g, eval.colour.b});
         if (utils::random() > p)
           return Colour(0,0,0);
-        // if the ray continues, we must divide the colour by the continuation probability
-        // so that paths with higher probability of continuation are not overestimated
+        // divide colour by p so that paths with higher prob of continuation are not overestimated
         eval.colour /= p;
       }
 
       // ray bounced
       if (eval.bounced) {
-        double scattering_pdf = hit.object->material->scattering_pdf(r_in, hit, eval.ray);
-        return eval.colour * scattering_pdf * trace_ray_monte_carlo(eval.ray, depth-1) / eval.pdf;
+        // attenuate the new ray colour by the cosine of the angle between the normal and the ray direction
+        double attenuation = std::max(0.0, glm::dot(hit.normal(), eval.ray.direction()));
+
+        // each material has a BRDF that defines how light is reflected
+        double brdf = hit.object->material->brdf(r_in, eval.ray);
+
+        // speed up: end paths that already have a very low contribution
+        if (vec::is_near_zero(eval.colour) || brdf < NEAR_ZERO || attenuation < NEAR_ZERO)
+          return Colour(0,0,0);
+
+        // trace new ray
+        // return eval.colour * brdf * attenuation * trace_ray_monte_carlo(eval.ray, depth+1) / eval.pdf;
+        return eval.colour * trace_ray_monte_carlo(eval.ray, depth+1);
       }
 
       // ray was absorbed by the material
@@ -203,6 +208,7 @@ class Camera {
     }
 
     // get a stratified sampled camera ray for the pixel at location i,j
+    // sample_idx is the index of the sample in the pixel, used to stratify the samples
     Ray ray_sample(int i, int j, int sample_idx) const {
       // pixel position
       Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);

@@ -59,7 +59,6 @@ class Primitive2D : public Primitive {
   protected:
     Point origin; // origin point of the primitive, in the plane
     Vec u, v;     // two vectors that define the plane where the primitive lies
-    double area;  // area of the primitive in the plane
 
     // should be called by the constructor of the derived class
     // after setting the origin, u and v fields

@@ -17,10 +17,10 @@ class Sphere;
 // A record that contains the result of evaluating a material at a hit point.
 class EvalRecord {
   public:
-    Colour colour; // colour of the material at the hit point
-    Ray ray;       // new ray to cast, if any
+    Colour colour; // evaluated colour of the material at the hit point
+    bool bounced;  // true if a new ray should be cast, false if light was absorbed
+    Ray ray;       // new ray to cast, if bounced is true
     double pdf;    // probability density function ponderation for the new ray
-    bool bounced;  // true if the ray was scattered, false if it was absorbed
 };
 
 
@@ -35,11 +35,11 @@ class Material {
     // a boolean indicating if a new ray should be cast, the new ray to cast
     // and the probability density function ponderation for the new ray.
     virtual EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const {
-      return EvalRecord{Colour(0,0,0), Ray(), 0, false};
+      return EvalRecord{Colour(0,0,0), false, Ray(), 0};
     }
 
-    // returns the PDF of the material for a given ray direction
-    virtual double scattering_pdf(const Ray& r_in, const HitRecord& rec, const Ray& r_out) const {
+    // Bidirectional Reflectance Distribution Function (BRDF)
+    virtual double brdf(const Ray& r_in, const Ray& r_out) const {
       return 0;
     }
 
@@ -60,9 +60,9 @@ class LightMat : public Material {
     EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
       return EvalRecord{
         hit.front_face() ? radiance(0) : Colour(0,0,0),
+        false,
         Ray(),
         0,
-        false
       };
     }
 
@@ -90,9 +90,9 @@ class Phong : public Material {
     EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
       return EvalRecord{
         phong_shade(r_in, hit, scene),
+        false,
         Ray(),
         0,
-        false
       };
     }
 
@@ -183,9 +183,9 @@ class PhongMirror : public Phong {
       // final colour is a mix of the phong shading and reflected colour
       return EvalRecord{
         (1-R)*phong_shade(r_in, hit, scene) + R*reflect_colour,
+        false,
         Ray(),
         0,
-        false
       };
     }
 
@@ -205,33 +205,12 @@ class Diffuse : public Material {
       CosinePdf surface_pdf(hit.normal());
       Ray out_ray = Ray(hit.p, surface_pdf.generate());
       double pdf = surface_pdf.value(out_ray.direction());
-
-      // Vec bounce_direction = vec::random_hemisphere_cosine(hit.normal());
-      // Ray out_ray = Ray(hit.p, bounce_direction);
-      // pdf = glm::dot(hit.normal(), out_ray.direction()) / M_PI;
-
-      // TODO: not working
-      // only one light source for now
-      // const auto& light = scene.lights.objects[0];
-      // auto light_pdf = PrimitivePdf(*light, hit.p);
-      // r_scattered = Ray(hit.p, light_pdf.generate());
-      // pdf_value = light_pdf.value(r_scattered.direction());
-      // std::clog << "light_pdf  : " << pdf_value << std::endl;
-
-      return EvalRecord{
-        albedo,
-        out_ray,
-        pdf,
-        true
-      };
+      return EvalRecord{albedo, true, out_ray, pdf};
     }
 
-    // diffuse scattering PDF for cosine sampling: cos(theta) / pi
-    double scattering_pdf(const Ray& r_in, const HitRecord& hit, const Ray& r_out) const {
-      // return 1 / (4*M_PI);
-      // return 1/M_PI;
-      double cosine = glm::dot(hit.normal(), r_out.direction());
-      return (cosine <= 0) ? 0 : cosine / M_PI;
+    // BRDF for Lambertian material: 1/pi
+    double brdf(const Ray& r_in, const Ray& r_out) const {
+      return M_1_PI;
     }
 
   private:
@@ -253,12 +232,10 @@ class Metal : public Material {
       reflected = glm::normalize(reflected) + (fuzz*vec::random_sphere_uniform());
       Ray out_ray = Ray(hit.p, reflected);
 
-      return EvalRecord{
-        albedo,
-        out_ray,
-        0, // TODO
-        glm::dot(out_ray.direction(), hit.normal()) > 0 // absorb rays that bounce below the surface
-      };
+      // absorb rays that bounce below the surface
+      bool bounced = glm::dot(out_ray.direction(), hit.normal()) > 0;
+
+      return EvalRecord{albedo, bounced, out_ray, 0}; // TODO: pdf
     }
 
   private:
@@ -286,9 +263,9 @@ class Dielectric : public Material {
 
       return EvalRecord{
         Colour(1, 1, 1), // dieletric material absorbs nothing
+        true,
         Ray(hit.p, direction),
         0, // TODO
-        true
       };
     }
 

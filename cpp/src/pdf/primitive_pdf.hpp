@@ -18,6 +18,7 @@ class PrimitivePdf : public Pdf {
       return primitive.pdf_value(Ray(origin, direction));
     }
 
+    // TODO: not working
     // generate a random direction according to the geometry of the primitive
     Vec generate() const override {
       // Vec v = primitive.pdf_sample(origin);

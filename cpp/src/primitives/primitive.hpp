@@ -12,12 +12,14 @@ class Material;
 class Primitive : public std::enable_shared_from_this<Primitive>, public Hittable {
   public:
     shared_ptr<Material> material; // material of the object
+    double area;                   // area of the surface of the object
 
     virtual ~Primitive() = default;
 
     // returns a random point on the primitive
     virtual Point get_sample() const = 0;
 
+    // TODO: not working
     // generate a random direction for a ray departing from the origin,
     // according to the geometry of the primitive.
     // default implementation returns works for quads

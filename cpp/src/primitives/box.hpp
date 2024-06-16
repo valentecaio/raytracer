@@ -34,6 +34,8 @@ class Box : public Primitive {
       faces.add(make_shared<Quad>(pmax, -dz, -dx, _mat)); // top
       faces.add(make_shared<Quad>(pmin,  dx,  dz, _mat)); // bottom
 
+      // primitive properties
+      area = 2 * (dx.y * dx.z + dy.x * dy.z + dz.x * dz.y);
       material = _mat;
     }
 

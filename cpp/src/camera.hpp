@@ -16,6 +16,8 @@ class Camera {
     int image_width = 100;          // image width in pixel count
     int samples_per_pixel = 9;      // number of random samples for each pixel, must be a square number for stratified sampling (1, 4, 9, 16, ...)
     int max_depth = 10;             // maximum number of ray bounces into scene
+    int min_depth = 3;              // minimum number of ray bounces into scene, for russian roulette
+    bool russian_roulette = true;   // enable russian roulette for path termination
 
     double vfov = 90.0;             // vertical field of view in degrees
     Point look_from = Point(0,0,0); // camera location
@@ -55,8 +57,8 @@ class Camera {
           auto pixel_colour = Colour(0, 0, 0);
           for (int sample_idx = 0; sample_idx < samples_per_pixel; ++sample_idx) {
             Ray r = ray_sample(i, j, sample_idx);
-            // pixel_colour += trace_ray(r, max_depth);
-            pixel_colour += trace_ray_monte_carlo(r, max_depth);
+            // pixel_colour += trace_ray(r);
+            pixel_colour += trace_ray_monte_carlo(r);
           }
           pixels[j][i] = pixel_colour * pixels_sample_scale;
         }
@@ -134,9 +136,9 @@ class Camera {
     }
 
     // returns the colour of the ray after it hits the scene
-    Colour trace_ray(const Ray& r_in, int depth) const {
+    Colour trace_ray(const Ray& r_in, int depth = 0) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
-      if (depth <= 0)
+      if (depth >= max_depth)
         return Colour(0,0,0);
 
       // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
@@ -149,13 +151,13 @@ class Camera {
 
       EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
       if (eval.bounced)
-        return eval.colour * trace_ray(eval.ray, depth-1);
+        return eval.colour * trace_ray(eval.ray, depth+1);
       return eval.colour; // ray was absorbed
     }
 
-    Colour trace_ray_monte_carlo(const Ray& r_in, int depth) const {
+    Colour trace_ray_monte_carlo(const Ray& r_in, int depth = 0) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
-      if (depth <= 0)
+      if (depth >= max_depth)
         return Colour(0,0,0);
 
       // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
@@ -168,7 +170,7 @@ class Camera {
       // light source
       if (hit.object->material->is_emissive()) {
         // we only count direct light sources at the first hit
-        if (depth == max_depth) {
+        if (depth == 0) {
           EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
           return eval.colour;
         } else {
@@ -176,8 +178,21 @@ class Camera {
         }
       }
 
-      // path tracing
+      // not light, evaluate the material
       EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
+
+      // russian roulette
+      if (russian_roulette && (depth >= min_depth)) {
+        // p is the continuation probability
+        double p = utils::max({eval.colour.r, eval.colour.g, eval.colour.b});
+        if (utils::random() > p)
+          return Colour(0,0,0);
+        // if the ray continues, we must divide the colour by the continuation probability
+        // so that paths with higher probability of continuation are not overestimated
+        eval.colour /= p;
+      }
+
+      // ray bounced
       if (eval.bounced) {
         double scattering_pdf = hit.object->material->scattering_pdf(r_in, hit, eval.ray);
         return eval.colour * scattering_pdf * trace_ray_monte_carlo(eval.ray, depth-1) / eval.pdf;

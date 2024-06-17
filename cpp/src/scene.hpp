@@ -4,7 +4,7 @@
 #include "utils/interval.hpp"
 #include "utils/random.hpp"
 #include "hittable/hittable_list.hpp"
-#include "pdf/pdf_sample.hpp"
+#include "pdf.hpp"
 #include "material.hpp"
 
 namespace raytracer {
@@ -89,6 +89,15 @@ class Scene : public Hittable {
       }
     }
 
+    // sample a light source from the scene using the pre-calculated CDF
+    shared_ptr<Primitive> sample_light(double& pdf) const {
+      int i = random::sample_cdf(light_cdf);
+      auto lmat = std::dynamic_pointer_cast<LightMat>(lights.objects[i]->material);
+      pdf = lmat->intensity / total_power;
+      // std::clog << "Sampled light " << i << " with pdf " << pdf << std::endl;
+      return lights.objects[i];
+    }
+
 
   private:
     std::vector<double> light_cdf; // CDF for light sampling by power
@@ -114,15 +123,6 @@ class Scene : public Hittable {
       std::clog << "Light CDF (power) updated: {";
       for (auto cdf : light_cdf) std::clog << cdf << ", ";
       std::clog << "}" << std::endl;
-    }
-
-    // sample a light source from the scene using the pre-calculated CDF
-    shared_ptr<Primitive> sample_light(double& pdf) const {
-      int i = random::sample_cdf(light_cdf);
-      auto lmat = std::dynamic_pointer_cast<LightMat>(lights.objects[i]->material);
-      pdf = lmat->intensity / total_power;
-      // std::clog << "Sampled light " << i << " with pdf " << pdf << std::endl;
-      return lights.objects[i];
     }
 };
 

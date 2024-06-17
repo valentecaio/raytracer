@@ -2,12 +2,12 @@
 
 #include "../utils/common.hpp"
 #include "../hittable/hittable.hpp"
-#include "../pdf/pdf_sample.hpp"
 
 namespace raytracer {
 
 // forward declarations to avoid circular dependencies.
 class Material;
+class PdfSample;
 
 // Abstract class that represents a primitive of a geometric object in the scene.
 class Primitive : public std::enable_shared_from_this<Primitive>, public Hittable {
@@ -22,6 +22,11 @@ class Primitive : public std::enable_shared_from_this<Primitive>, public Hittabl
 
     // returns a random point on the primitive with its normal and PDF
     virtual PdfSample pdf_sample() const = 0;
+
+    // TODO: transform in pure virtual
+    virtual double pdf_value(const Ray& r) const {
+      return 0.0;
+    }
 };
 
 } // namespace raytracer

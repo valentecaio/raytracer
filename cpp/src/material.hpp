@@ -3,7 +3,7 @@
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
 #include "utils/random.hpp"
-#include "pdf/cosine_pdf.hpp"
+#include "pdf.hpp"
 // #include "scene.hpp"
 #include "ray.hpp"
 
@@ -40,7 +40,7 @@ class Material {
     }
 
     // Bidirectional Reflectance Distribution Function (BRDF) ponderation for the material
-    virtual double brdf_factor(const Ray& r_in, const Ray& r_out) const {
+    virtual double brdf_factor() const {
       return 0;
     }
 
@@ -206,20 +206,17 @@ class Diffuse : public Material {
 
     EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
       // get a random direction from the surface and calculate the associated PDF
-      CosinePdf surface_pdf(hit.normal());
-      Ray out_ray = Ray(hit.p, surface_pdf.generate());
-      double pdf = surface_pdf.value(out_ray.direction());
       return EvalRecord{
         albedo,
         true,
-        out_ray,
-        pdf,
-        brdf_factor(r_in, out_ray)
+        Ray(),
+        0,
+        brdf_factor()
       };
     }
 
     // BRDF for Lambertian material: 1/pi
-    double brdf_factor(const Ray& r_in, const Ray& r_out) const override {
+    double brdf_factor() const override {
       return M_1_PI;
     }
 

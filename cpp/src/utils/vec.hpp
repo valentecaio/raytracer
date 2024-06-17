@@ -22,6 +22,7 @@ inline Vec change_basis(const Vec& normal, const Vec& vec) {
   // we multiply the vector by the inverse of the basis matrix.
   // which is equivalent to multiplying the vector by the transpose of the basis matrix.
   // M = {u, v, w}; M^-1 = M^T (M is orthonormal); return M^T * vec
+  // return glm::transpose(glm::mat3(u, v, w)) * vec;
   // return Vec(glm::dot(vec, u), glm::dot(vec, v), glm::dot(vec, w));
 
   // linear combination of the basis vectors weighted by vec

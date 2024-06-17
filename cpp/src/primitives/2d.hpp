@@ -115,6 +115,17 @@ class Quad : public Primitive2D {
       return random::sample_quad(origin, u, v);
     }
 
+    double pdf_value(const Ray& r) const override {
+      HitRecord hit;
+      if (!this->hit(r, Interval(0.0001, infinity), hit))
+        return 0.0;
+
+      // PDF = distance^2 / (cos(theta) * area)
+      double cos_theta = fabs(glm::dot(hit.normal(), r.direction()));
+      double dist = hit.t * hit.t * vec::length_squared(r.direction());
+      return dist / (cos_theta * area);
+    }
+
   private:
     bool is_hit(double alpha, double beta) const {
       return alpha >= 0 && beta >= 0 && alpha <= 1 && beta <= 1;

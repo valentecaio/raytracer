@@ -57,8 +57,8 @@ class Camera {
           for (int sample_idx = 0; sample_idx < samples_per_pixel; ++sample_idx) {
             Ray r = ray_sample(i, j, sample_idx);
             // pixel_colour += ray_trace(r);
-            pixel_colour += path_trace_recursive(r);
-            // pixel_colour += path_trace(r);
+            // pixel_colour += path_trace_recursive(r);
+            pixel_colour += path_trace(r);
           }
           pixels[j][i] = pixel_colour * pixels_sample_scale;
         }
@@ -156,7 +156,7 @@ class Camera {
     }
 
     Colour path_trace_recursive(const Ray& r_in, int depth = 0) const {
-      // if we've exceeded the ray bounce limit, the ray was absorbed
+      // ray was absorbed
       if (depth >= max_depth)
         return Colour(0,0,0);
 
@@ -241,16 +241,33 @@ class Camera {
 
         // ray bounced
         if (eval.bounced) {
-          double attenuation = std::max(0.0, glm::dot(hit.normal(), eval.ray.direction()));
           Colour brdf = eval.colour * eval.brdf_f;
 
-          Colour Le = scene.get_light_radiance(hit);
-          // Colour Le = Colour(1,1,1);
-          L += Le * beta * brdf;
+          // get contribution from a light source
+          L += beta * brdf * scene.get_light_radiance(hit);
 
           // next path segment
-          beta *= brdf * attenuation / eval.pdf;
-          r_in = eval.ray;
+          double pdf;
+          Ray out_ray;
+
+          // MIS with surface and light sampling
+          auto surface_pdf = make_shared<CosinePdf>(hit.normal());
+          out_ray = Ray(hit.p, surface_pdf->generate());
+          pdf = surface_pdf->value(out_ray.direction());
+
+          auto light_pdf = make_shared<PrimitivePdf>(scene.sample_light(pdf), hit.p);
+          // out_ray = Ray(hit.p, light_pdf->generate());
+          // pdf = light_pdf->value(out_ray.direction());
+
+          MixturePdf p(surface_pdf, light_pdf);
+          // out_ray = Ray(hit.p, p.generate());
+          // pdf = p.value(out_ray.direction());
+
+          // std::clog << "pdf: " << pdf << std::endl;
+
+          double attenuation = std::max(0.0, glm::dot(hit.normal(), out_ray.direction()));
+          beta *= brdf * attenuation / pdf;
+          r_in = out_ray;
         } else {
           // ray was absorbed by the material
           return L;
@@ -265,8 +282,8 @@ class Camera {
     Ray ray_sample(int i, int j, int sample_idx) const {
       // pixel position
       Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);
-      // Point pixel_pos = random::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
-      Point pixel_pos = random::sample_quad_stratified(pixel_upper_left, pixel_delta_u, pixel_delta_v, sample_idx, sqrt_spp);
+      Point pixel_pos = random::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
+      // Point pixel_pos = random::sample_quad_stratified(pixel_upper_left, pixel_delta_u, pixel_delta_v, sample_idx, sqrt_spp);
 
       // ray center
       Point ray_origin = center;

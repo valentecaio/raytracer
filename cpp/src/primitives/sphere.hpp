@@ -4,7 +4,7 @@
 #include "../utils/interval.hpp"
 #include "../utils/random.hpp"
 #include "../hittable/hit_record.hpp"
-#include "../pdf/pdf_sample.hpp"
+#include "../pdf.hpp"
 #include "../material.hpp"
 #include "primitive.hpp"
 

@@ -3,8 +3,6 @@
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
 #include "utils/random.hpp"
-// #include "pdf/primitive_pdf.hpp"
-// #include "primitives/2d.hpp"
 #include "scene.hpp"
 #include "material.hpp"
 
@@ -17,7 +15,7 @@ class Camera {
     int image_width = 100;          // image width in pixel count
     int samples_per_pixel = 9;      // number of random samples for each pixel, must be a square number for stratified sampling (1, 4, 9, 16, ...)
     int max_depth = 10;             // maximum number of ray bounces into scene
-    int min_depth = 3;              // minimum number of ray bounces into scene, for russian roulette
+    int min_depth = 4;              // minimum number of ray bounces into scene, for russian roulette
     bool russian_roulette = true;   // enable russian roulette for path termination
 
     double vfov = 90.0;             // vertical field of view in degrees
@@ -59,8 +57,8 @@ class Camera {
           for (int sample_idx = 0; sample_idx < samples_per_pixel; ++sample_idx) {
             Ray r = ray_sample(i, j, sample_idx);
             // pixel_colour += ray_trace(r);
+            pixel_colour += path_trace_recursive(r);
             // pixel_colour += path_trace(r);
-            pixel_colour += path_trace_walds(r);
           }
           pixels[j][i] = pixel_colour * pixels_sample_scale;
         }
@@ -157,7 +155,7 @@ class Camera {
       return eval.colour; // ray was absorbed
     }
 
-    Colour path_trace(const Ray& r_in, int depth = 0) const {
+    Colour path_trace_recursive(const Ray& r_in, int depth = 0) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth >= max_depth)
         return Colour(0,0,0);
@@ -202,22 +200,21 @@ class Camera {
 
         // trace new ray
         // return brdf * attenuation * path_trace(eval.ray, depth+1) / eval.pdf;
-        return eval.colour * path_trace(eval.ray, depth+1);
+        return eval.colour * path_trace_recursive(eval.ray, depth+1);
       }
 
       // ray was absorbed by the material
       return eval.colour;
     }
 
-    Colour path_trace_walds(Ray& r_in, int depth = 0) const {
+    Colour path_trace(Ray& r_in) const {
       auto L = Colour(0,0,0);
       auto beta = Colour(1,1,1);
-      for (int i = 0; i < max_depth; ++i) {
+      for (int depth = 0; depth < max_depth; ++depth) {
         // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
         HitRecord hit;
         if (!scene.hit(r_in, Interval(0.0001, infinity), hit))
-          return L + beta * scene.background;
-          // return L;
+          return L + beta * scene.ambient_light;
 
         // HIT //
 
@@ -226,17 +223,20 @@ class Camera {
 
         if (hit.object->material->is_emissive()) {
           // we only count direct light sources at the first hit
-          return (i==0) ? eval.colour : L;
+          return eval.colour;
+          // return (depth == 0) ? eval.colour : L;
         }
 
         // russian roulette
-        if (russian_roulette && i >= min_depth) {
+        if (russian_roulette && depth > min_depth) {
           // p is the continuation probability
-          double p = utils::max({eval.colour.r, eval.colour.g, eval.colour.b});
-          if (random::rand() > p)
+          double p = utils::max({beta.r, beta.g, beta.b});
+          if (random::rand() > p) {
+            // std::clog << "Russian roulette end at {depth, p} = {" << depth << ", " << p << "}" << std::endl;
             return L;
+          }
           // divide colour by p so that paths with higher prob of continuation are not overestimated
-          eval.colour /= p;
+          beta /= p;
         }
 
         // ray bounced
@@ -244,8 +244,8 @@ class Camera {
           double attenuation = std::max(0.0, glm::dot(hit.normal(), eval.ray.direction()));
           Colour brdf = eval.colour * eval.brdf_f;
 
-          // Colour Le = scene.get_light_radiance(hit);
-          Colour Le = Colour(1,1,1);
+          Colour Le = scene.get_light_radiance(hit);
+          // Colour Le = Colour(1,1,1);
           L += Le * beta * brdf;
 
           // next path segment

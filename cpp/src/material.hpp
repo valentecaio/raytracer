@@ -4,7 +4,7 @@
 #include "utils/utils.hpp"
 #include "utils/random.hpp"
 #include "pdf/cosine_pdf.hpp"
-#include "scene.hpp"
+// #include "scene.hpp"
 #include "ray.hpp"
 
 namespace raytracer {
@@ -12,7 +12,7 @@ namespace raytracer {
 // Forward declarations to avoid circular dependencies
 class HitRecord;
 class Sphere;
-
+class Scene;
 
 // A record that contains the result of evaluating a material at a hit point.
 class EvalRecord {
@@ -101,46 +101,46 @@ class Phong : public Material {
 
   protected:
     Colour phong_shade(const Ray& r_in, const HitRecord& hit, const Scene& scene) const {
-      Colour total_amb = scene.ambient_light;
-      Colour total_diff = Colour(0,0,0);
-      Colour total_spec = Colour(0,0,0);
+      // Colour total_amb = scene.ambient_light;
+      // Colour total_diff = Colour(0,0,0);
+      // Colour total_spec = Colour(0,0,0);
 
-      // view direction is the opposite of the incoming ray direction (already normalized)
-      Vec view_dir = -r_in.direction();
+      // // view direction is the opposite of the incoming ray direction (already normalized)
+      // Vec view_dir = -r_in.direction();
 
-      // try to hit lights in the scene to calculate the shading
-      for (const auto& light : scene.lights.objects) {
-        HitRecord shadow_hit;
-        auto diff = Colour(0,0,0);
-        auto spec = Colour(0,0,0);
+      // // try to hit lights in the scene to calculate the shading
+      // for (const auto& light : scene.lights.objects) {
+      //   HitRecord shadow_hit;
+      //   auto diff = Colour(0,0,0);
+      //   auto spec = Colour(0,0,0);
 
-        // point lights are sampled once, area lights are sampled multiple times
-        int nsamples = (std::dynamic_pointer_cast<Sphere>(light)) ? 1 : 10;
-        for (int i = 0; i < nsamples; i++) {
-          Point sample = light->sample();
-          Vec light_dir = glm::normalize(sample - hit.p);
+      //   // point lights are sampled once, area lights are sampled multiple times
+      //   int nsamples = (std::dynamic_pointer_cast<Sphere>(light)) ? 1 : 10;
+      //   for (int i = 0; i < nsamples; i++) {
+      //     Point sample = light->sample();
+      //     Vec light_dir = glm::normalize(sample - hit.p);
 
-          auto shadow_ray = Ray(hit.p, light_dir);
-          if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hit)
-              && shadow_hit.object == light) {
-            // light is visible from the hit point
-            auto light_mat = std::dynamic_pointer_cast<LightMat>(light->material);
+      //     auto shadow_ray = Ray(hit.p, light_dir);
+      //     if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hit)
+      //         && shadow_hit.object == light) {
+      //       // light is visible from the hit point
+      //       auto light_mat = std::dynamic_pointer_cast<LightMat>(light->material);
 
-            // diffuse
-            Vec light_radiance = light_mat->radiance(glm::length(sample - hit.p));
-            double attenuation = std::max(glm::dot(hit.normal(), light_dir), 0.0);
-            diff += attenuation * light_radiance;
+      //       // diffuse
+      //       Vec light_radiance = light_mat->radiance(glm::length(sample - hit.p));
+      //       double attenuation = std::max(glm::dot(hit.normal(), light_dir), 0.0);
+      //       diff += attenuation * light_radiance;
 
-            // specular
-            Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hit.normal()));
-            double RdotV = std::pow(std::max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
-            spec += light_radiance * RdotV;
-          }
-        }
-        total_diff += diff/(double)nsamples;
-        total_spec += spec/(double)nsamples;
-      }
-      return albedo * (ka*total_amb + kd*total_diff + ks*total_spec);
+      //       // specular
+      //       Vec reflect_dir = glm::normalize(glm::reflect(-light_dir, hit.normal()));
+      //       double RdotV = std::pow(std::max(glm::dot(reflect_dir, view_dir), 0.0), shininess);
+      //       spec += light_radiance * RdotV;
+      //     }
+      //   }
+      //   total_diff += diff/(double)nsamples;
+      //   total_spec += spec/(double)nsamples;
+      // }
+      // return albedo * (ka*total_amb + kd*total_diff + ks*total_spec);
     }
 
   private:
@@ -170,14 +170,14 @@ class PhongMirror : public Phong {
       // evaluate the reflected ray colour
       HitRecord reflect_hit;
       Colour reflect_colour;
-      if (scene.hit(reflect_ray, Interval(0.0001, infinity), reflect_hit)) {
-        // hit, evaluate the material
-        EvalRecord reflect_eval = reflect_hit.object->material->evaluate(scene, reflect_ray, reflect_hit);
-        reflect_colour = reflect_eval.colour;
-      } else {
-        // miss, use scene background colour
-        reflect_colour = scene.background;
-      }
+      // if (scene.hit(reflect_ray, Interval(0.0001, infinity), reflect_hit)) {
+      //   // hit, evaluate the material
+      //   EvalRecord reflect_eval = reflect_hit.object->material->evaluate(scene, reflect_ray, reflect_hit);
+      //   reflect_colour = reflect_eval.colour;
+      // } else {
+      //   // miss, use scene background colour
+      //   reflect_colour = scene.background;
+      // }
 
       // reflectance
       double cos_theta = std::min(glm::dot(-r_in.direction(), hit.normal()), 1.0);

@@ -3,6 +3,7 @@
 #include "../utils/common.hpp"
 #include "../utils/interval.hpp"
 #include "../hittable/hit_record.hpp"
+#include "../hittable/hittable_list.hpp"
 #include "../material.hpp"
 #include "primitive.hpp"
 #include "2d.hpp"

@@ -61,9 +61,17 @@ void cornell_box(bool use_phong) {
   scene.background = Colour(0.1, 0.1, 0.1);
 
   // light
-  auto mat_light = make_shared<LightMat>(Colour(1, 1, 1), 5);
-  scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
+  // auto mat_light = make_shared<LightMat>(Colour(1, 1, 1), 2);
+  // scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light));
   // scene.add(make_shared<Sphere>(Point(278, 554, 278), 50, mat_light));
+
+  // add a second light on the right of the first
+  auto mat_light2 = make_shared<LightMat>(Colour(1, 1, 0), 5);
+  scene.add(make_shared<Quad>(Point(200, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mat_light2));
+
+  // add a sphere light on the left
+  auto mat_light3 = make_shared<LightMat>(Colour(1, 0, 1), 5);
+  scene.add(make_shared<Sphere>(Point(450, 554, 270), 50, mat_light3));
 
   shared_ptr<Material> red, white, green, mirror;
   if (use_phong) {

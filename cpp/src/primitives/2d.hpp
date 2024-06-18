@@ -56,12 +56,24 @@ class Primitive2D : public Primitive {
 
     // returns a random point in the 2D primitive
     // sample(), normal and area should be defined by the derived class
-    PdfSample pdf_sample() const override {
-      return PdfSample{
+    Sample pdf_sample() const override {
+      return Sample{
         sample(),
         normal,
-        1.0 / area,
+        1.0 / area, // TODO: not used yet
       };
+    }
+
+    double pdf_value(const Ray& r) const override {
+      // the pdf is zero if the ray does not hit the primitive
+      HitRecord hit;
+      if (!this->hit(r, Interval(0.0001, infinity), hit))
+        return 0.0;
+
+      // PDF = distance^2 / (cos(theta) * area)
+      double cos_theta = fabs(glm::dot(hit.normal(), r.direction()));
+      double dist = hit.t * hit.t * vec::length_squared(r.direction());
+      return dist / (cos_theta * area);
     }
 
 
@@ -113,17 +125,6 @@ class Quad : public Primitive2D {
 
     Point sample() const override {
       return random::sample_quad(origin, u, v);
-    }
-
-    double pdf_value(const Ray& r) const override {
-      HitRecord hit;
-      if (!this->hit(r, Interval(0.0001, infinity), hit))
-        return 0.0;
-
-      // PDF = distance^2 / (cos(theta) * area)
-      double cos_theta = fabs(glm::dot(hit.normal(), r.direction()));
-      double dist = hit.t * hit.t * vec::length_squared(r.direction());
-      return dist / (cos_theta * area);
     }
 
   private:

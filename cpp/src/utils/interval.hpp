@@ -4,7 +4,7 @@
 
 namespace raytracer {
 
-// The Interval class represents a closed interval [min, max].
+// A closed numbers interval [min, max].
 class Interval {
   public:
     double min, max;

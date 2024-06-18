@@ -60,14 +60,17 @@ class Sphere : public Primitive {
       return random::sample_sphere_uniform(center, radius);
     }
 
-    PdfSample pdf_sample() const override {
+    Sample pdf_sample() const override {
       Point s = sample();
-      return PdfSample{
+      return Sample{
         s,
-        (s - center) / radius,
+        (s - center) / radius, // normalized outward normal
         1.0 / area,
       };
     }
+
+    // TODO: support pdf sampling
+    // double pdf_value(const Ray& r) const override {}
 
   private:
     Point center;

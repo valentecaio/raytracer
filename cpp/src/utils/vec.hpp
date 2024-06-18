@@ -4,8 +4,9 @@
 
 using namespace raytracer;
 
-// The vec namespace contains utility functions for vectors.
+// Additional utility functions for vectors.
 namespace raytracer::vec {
+
 
 // Calculates the orthonormal basis vectors u,v,w from a normal,
 // and then returns the linear combination of them,

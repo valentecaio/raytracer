@@ -5,9 +5,9 @@
 
 using namespace raytracer;
 
-// The random namespace contains utility functions for random number generation.
-
+// Utility functions for random number generation and sampling.
 namespace raytracer::random {
+
 
 // returns a random real in [0,1).
 inline double rand() {
@@ -92,8 +92,8 @@ inline Vec sample_sphere_uniform() {
   return Vec(x, y, z);                   // already unitary
 }
 
-// returns a randim sample in the surface of the sphere centered at c with radius r
-inline Point sample_sphere_uniform(Point c, double r) {
+// returns a random sample in the surface of the sphere centered at c with radius r
+inline Vec sample_sphere_uniform(Point c, double r) {
   return c + r*sample_sphere_uniform();
 }
 

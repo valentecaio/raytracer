@@ -11,9 +11,8 @@ class Ray {
     Ray(const Point& _origin, const Vec& _direction)
       : orig(_origin), dir(glm::normalize(_direction)) {}
 
-    // already normalized
-    Vec direction() const { return dir; }
     Point origin() const { return orig; }
+    Vec direction() const { return dir; }
 
     Point at(double t) const {
       return orig + t*dir;

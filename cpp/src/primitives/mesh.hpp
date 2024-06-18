@@ -44,18 +44,15 @@ class Mesh : public Primitive {
       return triangles.hit(r, ray_t, hit) && (hit.object = shared_from_this());
     }
 
-    // returns a random point in one of the triangles
-    // TODO: this is not uniform
+    // TODO - this is not uniform (smaller faces are more densely sampled)
     Point sample() const override {
-      return Point(0, 0, 0); // TODO
-      // int idx = random::rand_int(0, triangles.objects.size() - 1);
-      // return triangles.objects[idx]->sample();
+      int idx = random::rand_int(0, triangles.objects.size() - 1);
+      return triangles.objects[idx]->sample();
     }
 
-    // TODO
-    PdfSample pdf_sample() const override {
-      return PdfSample();
-    }
+    // TODO: support pdf sampling
+    // Sample pdf_sample() const override {}
+    // double pdf_value(const Ray& r) const override {}
 
 
   private:

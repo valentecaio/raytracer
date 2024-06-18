@@ -4,7 +4,7 @@
 
 using namespace raytracer;
 
-// The utils namespace contains utility functions that are used throughout the raytracer.
+// Miscelaneous utility functions that are used throughout the raytracer.
 namespace raytracer::utils {
 
 

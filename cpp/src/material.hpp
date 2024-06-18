@@ -4,7 +4,6 @@
 #include "utils/utils.hpp"
 #include "utils/random.hpp"
 #include "pdf.hpp"
-// #include "scene.hpp"
 #include "ray.hpp"
 
 namespace raytracer {
@@ -14,14 +13,21 @@ class HitRecord;
 class Sphere;
 class Scene;
 
+
 // A record that contains the result of evaluating a material at a hit point.
 class EvalRecord {
   public:
-    Colour colour; // evaluated colour of the material at the hit point
-    bool bounced;  // true if a new ray should be cast, false if light was absorbed
-    Ray ray;       // new ray to cast, if bounced is true
-    double pdf;    // Probability Density Function (PDF) ponderation for the new ray
-    double brdf_f; // Bidirectional Reflectance Distribution Function (BRDF) ponderation
+    Colour colour;       // evaluated colour of the material at the hit point
+    shared_ptr<Pdf> pdf; // pointer to the pdf to be used to sample a new ray
+    shared_ptr<Ray> ray; // new ray to cast, if pdf is null
+
+    // constructor with only colour (when ray was absorbed)
+    EvalRecord(const Colour& _colour)
+      : colour(_colour), pdf(nullptr), ray(nullptr) {}
+
+    // constructor with all parameters
+    EvalRecord(const Colour& _colour, shared_ptr<Pdf> _pdf, shared_ptr<Ray> _ray)
+      : colour(_colour), pdf(_pdf), ray(_ray) {}
 };
 
 
@@ -36,16 +42,18 @@ class Material {
     // a boolean indicating if a new ray should be cast, the new ray to cast
     // and the probability density function ponderation for the new ray.
     virtual EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const {
-      return EvalRecord{Colour(0,0,0), false, Ray(), 0, 0};
+      return EvalRecord(Colour(0));
+    }
+
+    // Calculate the probability density function ponderation for the new ray
+    virtual double scatter_pdf(const Vec& normal, const Ray& r_out) const {
+      return 0;
     }
 
     // Bidirectional Reflectance Distribution Function (BRDF) ponderation for the material
     virtual double brdf_factor() const {
       return 0;
     }
-
-    // returns true if the material emits light, false otherwise
-    virtual bool is_emissive() const { return false; }
 };
 
 
@@ -59,13 +67,7 @@ class LightMat : public Material {
     LightMat(const Colour& _colour, double _intensity) : colour(_colour), intensity(_intensity) {}
 
     EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
-      return EvalRecord{
-        hit.front_face() ? radiance(0) : Colour(0,0,0),
-        false,
-        Ray(),
-        0,
-        0,
-      };
+      return EvalRecord(hit.front_face() ? radiance(0) : Colour(0));
     }
 
     // calculate the radiance of the light at a given distance
@@ -73,9 +75,6 @@ class LightMat : public Material {
       // return colour * intensity / (t*t); // TODO
       return colour * intensity;
     }
-
-    // light sources are emissive
-    bool is_emissive() const override { return true; }
 };
 
 
@@ -90,20 +89,14 @@ class Phong : public Material {
       : albedo(_albedo), shininess(_shininess), ka(_ka), kd(_kd), ks(_ks) {}
 
     EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
-      return EvalRecord{
-        phong_shade(r_in, hit, scene),
-        false,
-        Ray(),
-        0,
-        0,
-      };
+      return EvalRecord(phong_shade(r_in, hit, scene));
     }
 
   protected:
     Colour phong_shade(const Ray& r_in, const HitRecord& hit, const Scene& scene) const {
       // Colour total_amb = scene.ambient_light;
-      // Colour total_diff = Colour(0,0,0);
-      // Colour total_spec = Colour(0,0,0);
+      // Colour total_diff = Colour(0);
+      // Colour total_spec = Colour(0);
 
       // // view direction is the opposite of the incoming ray direction (already normalized)
       // Vec view_dir = -r_in.direction();
@@ -111,8 +104,8 @@ class Phong : public Material {
       // // try to hit lights in the scene to calculate the shading
       // for (const auto& light : scene.lights.objects) {
       //   HitRecord shadow_hit;
-      //   auto diff = Colour(0,0,0);
-      //   auto spec = Colour(0,0,0);
+      //   auto diff = Colour(0);
+      //   auto spec = Colour(0);
 
       //   // point lights are sampled once, area lights are sampled multiple times
       //   int nsamples = (std::dynamic_pointer_cast<Sphere>(light)) ? 1 : 10;
@@ -124,10 +117,10 @@ class Phong : public Material {
       //     if (scene.hit(shadow_ray, Interval(0.0001, infinity), shadow_hit)
       //         && shadow_hit.object == light) {
       //       // light is visible from the hit point
-      //       auto light_mat = std::dynamic_pointer_cast<LightMat>(light->material);
+      //       auto lmat = std::static_pointer_cast<LightMat>(light->material);
 
       //       // diffuse
-      //       Vec light_radiance = light_mat->radiance(glm::length(sample - hit.p));
+      //       Vec light_radiance = lmat->radiance(glm::length(sample - hit.p));
       //       double attenuation = std::max(glm::dot(hit.normal(), light_dir), 0.0);
       //       diff += attenuation * light_radiance;
 
@@ -184,13 +177,7 @@ class PhongMirror : public Phong {
       double R = utils::reflectance(cos_theta, refract_idx);
 
       // final colour is a mix of the phong shading and reflected colour
-      return EvalRecord{
-        (1-R)*phong_shade(r_in, hit, scene) + R*reflect_colour,
-        false,
-        Ray(),
-        0,
-        0,
-      };
+      return EvalRecord((1-R)*phong_shade(r_in, hit, scene) + R*reflect_colour);
     }
 
   private:
@@ -205,14 +192,17 @@ class Diffuse : public Material {
     Diffuse(const Colour& _albedo) : albedo(_albedo) {}
 
     EvalRecord evaluate(const Scene& scene, const Ray& r_in, const HitRecord& hit) const override {
-      // get a random direction from the surface and calculate the associated PDF
       return EvalRecord{
         albedo,
-        true,
-        Ray(),
-        0,
-        brdf_factor()
+        std::make_shared<CosinePdf>(hit.normal()),
+        nullptr,
       };
+    }
+
+    // PDF for the new ray: cosine-weighted in the hemisphere around the normal
+    double scatter_pdf(const Vec& normal, const Ray& r_out) const override {
+      double cos_theta = std::max(glm::dot(normal, r_out.direction()), 0.0);
+      return cos_theta * brdf_factor();
     }
 
     // BRDF for Lambertian material: 1/pi
@@ -237,12 +227,17 @@ class Metal : public Material {
       // bounce the ray in a fuzzy direction
       Vec reflected = glm::reflect(r_in.direction(), hit.normal());
       reflected = glm::normalize(reflected) + (fuzz*random::sample_sphere_uniform());
-      Ray out_ray = Ray(hit.p, reflected);
+      auto out_ray = make_shared<Ray>(hit.p, reflected);
 
       // absorb rays that bounce below the surface
-      bool bounced = glm::dot(out_ray.direction(), hit.normal()) > 0;
+      bool bounced = glm::dot(out_ray->direction(), hit.normal()) > 0;
 
-      return EvalRecord{albedo, bounced, out_ray, 0, 0}; // TODO: pdf, brdf
+       // TODO
+      return EvalRecord{
+        albedo,
+        nullptr,
+        bounced ? out_ray : nullptr,
+      };
     }
 
   private:
@@ -268,12 +263,11 @@ class Dielectric : public Material {
       else
         direction = glm::refract(r_in.direction(), hit.normal(), ri);
 
+      // TODO
       return EvalRecord{
-        Colour(1, 1, 1), // dieletric material absorbs nothing
-        true,
-        Ray(hit.p, direction),
-        0, // TODO
-        0,
+        Colour(1), // dieletric material absorbs nothing
+        nullptr,
+        make_shared<Ray>(hit.p, direction),
       };
     }
 

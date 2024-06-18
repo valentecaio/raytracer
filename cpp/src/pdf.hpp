@@ -7,17 +7,6 @@
 
 namespace raytracer {
 
-// forward declarations
-// class Hittable;
-
-// A sample point on a surface with its normal and PDF value
-class PdfSample {
-  public:
-    Point p;    // sample point
-    Vec normal; // normal at the sample point
-    double pdf; // probability density function ponderation
-};
-
 
 // Abstract class that represents a probability density function (PDF)
 class Pdf {
@@ -50,7 +39,7 @@ class CosinePdf : public Pdf {
     }
 
   private:
-    Vec max_direction; // the direction to which the PDF is cosine-weighted
+    Vec max_direction; // the direction to which the PDF is 1.0
 };
 
 
@@ -83,8 +72,7 @@ class PrimitivePdf : public Pdf {
 
     // generate a random direction on the object
     Vec generate() const override {
-      PdfSample sample = object->pdf_sample();
-      return sample.p - origin;
+      return object->sample() - origin;
     }
 
   private:
@@ -96,20 +84,17 @@ class PrimitivePdf : public Pdf {
 // PDF for a mixture of two PDFs
 class MixturePdf : public Pdf {
   public:
-    MixturePdf(shared_ptr<Pdf> _pdf1, shared_ptr<Pdf> _pdf2) {
-      pdf1 = _pdf1;
-      pdf2 = _pdf2;
-    }
-    //  : pdf1(_pdf1), pdf2(_pdf2) {}
+    MixturePdf(shared_ptr<Pdf> _pdf1, shared_ptr<Pdf> _pdf2)
+     : pdf1(_pdf1), pdf2(_pdf2) {}
 
     // mixture PDF
     double value(const Vec& direction) const override {
-      return 0.99 * pdf1->value(direction) + 0.01 * pdf2->value(direction);
+      return 0.5 * pdf1->value(direction) + 0.5 * pdf2->value(direction);
     }
 
     // generate a random direction according to the mixture PDF
     Vec generate() const override {
-      return random::rand() < 0.99 ? pdf1->generate() : pdf2->generate();
+      return random::rand() < 0.5 ? pdf1->generate() : pdf2->generate();
     }
 
   private:

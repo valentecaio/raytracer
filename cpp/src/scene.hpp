@@ -9,14 +9,12 @@
 
 namespace raytracer {
 
-// Forward declarations to avoid circular dependencies.
-// class LightMat;
 
 // A hittable scene in 3D space.
 class Scene : public Hittable {
   public:
     Colour ambient_light = Colour(0, 0, 0); // scene ambient light colour, used in Phong
-    Colour background = Colour(0, 0, 0);    // scene background colour
+    Colour background = Colour(0, 0, 0);    // scene background colour - TODO: used?
     HittableList primitives;                // scene geometric instanced objects
     HittableList lights;                    // light sources
 
@@ -54,18 +52,28 @@ class Scene : public Hittable {
       return hit_object || hit_light;;
     }
 
+    // sample a light source from the scene using the pre-calculated CDF
+    shared_ptr<Primitive> sample_light() const {
+      return lights.objects[random::sample_cdf(light_cdf)];
+    }
+
     // get the radiance of the light source at the hit point
     Colour get_light_radiance(const HitRecord& hit) const {
       // sample a light from the scene
-      double pdf;
-      shared_ptr<Primitive> light = sample_light(pdf);
-      auto lmat = std::dynamic_pointer_cast<LightMat>(light->material);
+      shared_ptr<Primitive> light = sample_light();
+      auto lmat = std::static_pointer_cast<LightMat>(light->material);
+      double pdf = lmat->intensity / total_power;
 
       // sample a point on the light source and a ray towards it
-      PdfSample sample = light->pdf_sample();
+      Sample sample = light->pdf_sample();
       Vec wi = glm::normalize(sample.p - hit.p);
-      Ray ray(hit.p, wi);
-      // pdf *= sample.pdf; // TODO
+      auto ray = Ray(hit.p, wi);
+      // pdf *= sample.pdf; // TODO: not working
+
+      // TODO: MIS not working
+      // auto surface_pdf = make_shared<CosinePdf>(hit.normal());
+      // ray = random::rand() < 0.5 ? ray : Ray(hit.p, surface_pdf->generate());
+      // pdf = 0.5 * pdf + 0.5 * surface_pdf->value(ray.direction());
 
       // launch ray and try to hit the light source
       HitRecord hitrec;
@@ -89,15 +97,6 @@ class Scene : public Hittable {
       }
     }
 
-    // sample a light source from the scene using the pre-calculated CDF
-    shared_ptr<Primitive> sample_light(double& pdf) const {
-      int i = random::sample_cdf(light_cdf);
-      auto lmat = std::dynamic_pointer_cast<LightMat>(lights.objects[i]->material);
-      pdf = lmat->intensity / total_power;
-      // std::clog << "Sampled light " << i << " with pdf " << pdf << std::endl;
-      return lights.objects[i];
-    }
-
 
   private:
     std::vector<double> light_cdf; // CDF for light sampling by power
@@ -110,17 +109,17 @@ class Scene : public Hittable {
       total_power = 0;
 
       for (const auto& light : lights.objects) {
-        auto lmat = std::dynamic_pointer_cast<LightMat>(light->material);
+        auto lmat = std::static_pointer_cast<LightMat>(light->material);
         total_power += lmat->intensity;
         light_cdf.push_back(total_power);
       }
 
-      // normalize the cdf
+      // normalize the CDF
       for (auto& cdf : light_cdf)
         cdf /= total_power;
 
       // print the new CDF
-      std::clog << "Light CDF (power) updated: {";
+      std::clog << "Updated lights CDF (by power): {";
       for (auto cdf : light_cdf) std::clog << cdf << ", ";
       std::clog << "}" << std::endl;
     }

@@ -48,18 +48,15 @@ class Box : public Primitive {
       return faces.hit(r, ray_t, hit) && (hit.object = shared_from_this());
     }
 
-    // returns a random point in one of the 6 box faces
-    // TODO: this is not uniform
+    // TODO - this is not uniform (smaller faces are more densely sampled)
     Point sample() const override {
-      return Point(0, 0, 0); // TODO
-      // int idx = random::rand_int(0, 5);
-      // return faces.objects[idx].get()->sample();
+      int idx = random::rand_int(0, 5);
+      return faces.objects[idx].get()->sample();
     }
 
-    // TODO
-    PdfSample pdf_sample() const override {
-      return PdfSample();
-    }
+    // TODO: support pdf sampling
+    // Sample pdf_sample() const override {}
+    // double pdf_value(const Ray& r) const override {}
 
   private:
     HittableList faces;

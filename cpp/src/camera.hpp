@@ -3,6 +3,7 @@
 #include "utils/common.hpp"
 #include "utils/utils.hpp"
 #include "utils/random.hpp"
+#include "hittable/hit_record.hpp"
 #include "scene.hpp"
 #include "material.hpp"
 
@@ -16,6 +17,7 @@ class Camera {
     int samples_per_pixel = 9;      // number of random samples for each pixel, must be a square number for stratified sampling (1, 4, 9, 16, ...)
     int max_depth = 10;             // maximum number of ray bounces into scene
     int min_depth = 4;              // minimum number of ray bounces into scene, for russian roulette
+    bool enable_MIS = false;        // enable Multiple Importance Sampling (MIS) for light and surface sampling
     bool russian_roulette = true;   // enable russian roulette for path termination
 
     double vfov = 90.0;             // vertical field of view in degrees
@@ -40,15 +42,6 @@ class Camera {
     #ifdef OPENMP
       // CPU parallelization
       #pragma omp parallel for schedule(static)
-    #elif defined(OPENACC)
-      // GPU parallelization (experimental)
-      auto pixels = std::vector<std::vector<Colour>>(image_height, std::vector<Colour>(image_width));
-      auto image_width = this->image_width;
-      auto image_height = this->image_height;
-      auto samples_per_pixel = this->samples_per_pixel;
-      auto max_depth = this->max_depth;
-      #pragma acc data copy(pixels, image_height, image_width, samples_per_pixel, max_depth)
-      #pragma acc parallel loop
     #endif
 
       for (int j = 0; j < image_height; ++j) {
@@ -57,7 +50,6 @@ class Camera {
           for (int sample_idx = 0; sample_idx < samples_per_pixel; ++sample_idx) {
             Ray r = ray_sample(i, j, sample_idx);
             // pixel_colour += ray_trace(r);
-            // pixel_colour += path_trace_recursive(r);
             pixel_colour += path_trace(r);
           }
           pixels[j][i] = pixel_colour * pixels_sample_scale;
@@ -76,8 +68,8 @@ class Camera {
     Vec u, v, w;              // camera coordinate system
     Vec defocus_u, defocus_v; // defocus vectors, u is horizontal, v is vertical
     bool initialized = false; // flag to check if the camera has been initialized
-    Scene scene;              // scene to render
     int sqrt_spp;             // square root of samples_per_pixel
+    const Scene scene;        // scene to render
 
     std::vector<std::vector<Colour>> pixels; // image pixel data
 
@@ -135,143 +127,94 @@ class Camera {
         pixels[j].resize(image_width);
     }
 
-    // returns the colour of the ray after it hits the scene
+    // Simple ray tracing algorithm with basic path tracing (recursive).
     Colour ray_trace(const Ray& r_in, int depth = 0) const {
       // if we've exceeded the ray bounce limit, the ray was absorbed
       if (depth >= max_depth)
-        return Colour(0,0,0);
+        return Colour(0);
 
       // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
-      // misses are considered as background colour
+      // misses are considered as ambient_light colour
       HitRecord hit;
       if (!scene.hit(r_in, Interval(0.0001, infinity), hit))
-        return scene.background;
+        return scene.ambient_light;
 
       // HIT //
 
       EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
-      if (eval.bounced)
-        return eval.colour * ray_trace(eval.ray, depth+1);
-      return eval.colour; // ray was absorbed
+
+      // ray was bounced and has a fixed direction (simple reflection)
+      if (eval.ray != nullptr)
+        return eval.colour * ray_trace(*eval.ray, depth+1);
+
+      // ray was bounced and has a pdf (Diffuse)
+      else if (eval.pdf != nullptr)
+        return eval.colour * ray_trace(Ray(hit.p, eval.pdf->generate()), depth+1);
+
+      // ray was absorbed (Light and Phong materials)
+      else
+        return eval.colour;
     }
 
-    Colour path_trace_recursive(const Ray& r_in, int depth = 0) const {
-      // ray was absorbed
-      if (depth >= max_depth)
-        return Colour(0,0,0);
+    // Iterative path tracing algorithm.
+    Colour path_trace(Ray& ray) const {
+      auto L    = Colour(0); // accumulated radiance
+      auto beta = Colour(1); // ponderation factor for the path
 
-      // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
-      HitRecord hit;
-      if (!scene.hit(r_in, Interval(0.0001, infinity), hit))
-        return scene.ambient_light; // miss
-
-      // HIT //
-
-      // evaluate the material at the hit point
-      EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
-
-      // light source
-      if (hit.object->material->is_emissive()) {
-        // we only count direct light sources at the first hit
-        return (depth == 0) ? eval.colour : Colour(0,0,0);
-      }
-
-      // russian roulette
-      if (russian_roulette && depth >= min_depth) {
-        // p is the continuation probability
-        double p = utils::max({eval.colour.r, eval.colour.g, eval.colour.b});
-        if (random::rand() > p)
-          return Colour(0,0,0);
-        // divide colour by p so that paths with higher prob of continuation are not overestimated
-        eval.colour /= p;
-      }
-
-      // ray bounced
-      if (eval.bounced) {
-        // attenuate the new ray colour by the cosine of the angle between the normal and the ray direction
-        double attenuation = std::max(0.0, glm::dot(hit.normal(), eval.ray.direction()));
-
-        // each material has a BRDF that defines how light is reflected
-        Colour brdf = eval.colour * eval.brdf_f;
-
-        // speed up: end paths that already have a very low contribution
-        if (vec::is_near_zero(eval.colour) || vec::is_near_zero(brdf) || attenuation < NEAR_ZERO)
-          return Colour(0,0,0);
-
-        // trace new ray
-        // return brdf * attenuation * path_trace(eval.ray, depth+1) / eval.pdf;
-        return eval.colour * path_trace_recursive(eval.ray, depth+1);
-      }
-
-      // ray was absorbed by the material
-      return eval.colour;
-    }
-
-    Colour path_trace(Ray& r_in) const {
-      auto L = Colour(0,0,0);
-      auto beta = Colour(1,1,1);
       for (int depth = 0; depth < max_depth; ++depth) {
+        // russian roulette (https://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/Russian_Roulette_and_Splitting)
+        if (russian_roulette && depth > min_depth) {
+          // continuation probability (at least 10%)
+          double p = utils::max({beta.r, beta.g, beta.b, 0.1});
+          if (random::rand() > p) {
+            // std::clog << "---" << std::endl;
+            // std::clog << "Russian roulette end at {depth, p} = {" << depth << ", " << p << "}" << std::endl;
+            // vec::print(beta);
+            return L;
+          }
+          // compensate beta so that paths with higher prob of continuation are not overestimated
+          beta /= p;
+        }
+
         // try to hit an object in the scene, starting at 0.0001 to avoid self-intersection
+        // misses are considered as ambient_light colour
         HitRecord hit;
-        if (!scene.hit(r_in, Interval(0.0001, infinity), hit))
+        if (!scene.hit(ray, Interval(0.0001, infinity), hit)) {
           return L + beta * scene.ambient_light;
+        }
 
         // HIT //
 
         // evaluate the material at the hit point
-        EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
+        auto mat = hit.object->material;
+        EvalRecord eval = mat->evaluate(scene, ray, hit);
 
-        if (hit.object->material->is_emissive()) {
-          // we only count direct light sources at the first hit
-          return eval.colour;
+        // light source
+        if (std::dynamic_pointer_cast<LightMat>(hit.object->material)) {
+          // TODO: we should only count direct light sources at the first hit.
+          // if we do so, the noise decreases faster, but we lose the reflection
+          // of light on the scene objects, which looks much less realistic.
           // return (depth == 0) ? eval.colour : L;
+          // return eval.colour * beta;
+          return eval.colour; // more noise, but more realistic
         }
 
-        // russian roulette
-        if (russian_roulette && depth > min_depth) {
-          // p is the continuation probability
-          double p = utils::max({beta.r, beta.g, beta.b});
-          if (random::rand() > p) {
-            // std::clog << "Russian roulette end at {depth, p} = {" << depth << ", " << p << "}" << std::endl;
-            return L;
-          }
-          // divide colour by p so that paths with higher prob of continuation are not overestimated
-          beta /= p;
+        // ray was absorbed (Phong materials)
+        if (eval.pdf == nullptr && eval.ray == nullptr) {
+          return L * eval.colour;
         }
 
-        // ray bounced
-        if (eval.bounced) {
-          Colour brdf = eval.colour * eval.brdf_f;
+        // path trace material
 
-          // get contribution from a light source
-          L += beta * brdf * scene.get_light_radiance(hit);
+        // end path shooting a last ray to a light source
+        Colour Le = scene.get_light_radiance(hit);
+        L += Le * beta * eval.colour * mat->brdf_factor();
 
-          // next path segment
-          double pdf;
-          Ray out_ray;
-
-          // MIS with surface and light sampling
-          auto surface_pdf = make_shared<CosinePdf>(hit.normal());
-          out_ray = Ray(hit.p, surface_pdf->generate());
-          pdf = surface_pdf->value(out_ray.direction());
-
-          auto light_pdf = make_shared<PrimitivePdf>(scene.sample_light(pdf), hit.p);
-          // out_ray = Ray(hit.p, light_pdf->generate());
-          // pdf = light_pdf->value(out_ray.direction());
-
-          MixturePdf p(surface_pdf, light_pdf);
-          // out_ray = Ray(hit.p, p.generate());
-          // pdf = p.value(out_ray.direction());
-
-          // std::clog << "pdf: " << pdf << std::endl;
-
-          double attenuation = std::max(0.0, glm::dot(hit.normal(), out_ray.direction()));
-          beta *= brdf * attenuation / pdf;
-          r_in = out_ray;
-        } else {
-          // ray was absorbed by the material
-          return L;
-        }
+        // prepare next path segment
+        ray = Ray(hit.p, eval.pdf->generate());
+        double pdf = eval.pdf->value(ray.direction());
+        double scatter_pdf = mat->scatter_pdf(hit.normal(), ray);
+        beta *= eval.colour * scatter_pdf / pdf;
       }
       return L;
     }
@@ -283,6 +226,8 @@ class Camera {
       // pixel position
       Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);
       Point pixel_pos = random::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
+
+      // TODO: stratified sampling not working properly
       // Point pixel_pos = random::sample_quad_stratified(pixel_upper_left, pixel_delta_u, pixel_delta_v, sample_idx, sqrt_spp);
 
       // ray center

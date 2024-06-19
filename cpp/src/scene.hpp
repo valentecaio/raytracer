@@ -13,10 +13,10 @@ namespace raytracer {
 // A hittable scene in 3D space.
 class Scene : public Hittable {
   public:
-    Colour ambient_light = Colour(0, 0, 0); // scene ambient light colour, used in Phong
-    Colour background = Colour(0, 0, 0);    // scene background colour - TODO: used?
-    HittableList primitives;                // scene geometric instanced objects
-    HittableList lights;                    // light sources
+    Colour ambient_light = Colour(0); // scene ambient light colour
+    Colour background = Colour(0);    // scene background colour - only used by Phong materials
+    HittableList primitives;          // scene geometric instanced objects
+    HittableList lights;              // light sources
 
     Scene() = default;
     Scene(Colour _ambient_light) : ambient_light(_ambient_light) {}
@@ -82,18 +82,9 @@ class Scene : public Hittable {
         double cos1 = std::max(glm::dot(hit.normal(), wi), 0.0);
         double cos2 = std::max(glm::dot(-wi, sample.normal), 0.0);
         Colour radiance = lmat->radiance(distance);
-        Colour v = radiance * cos1 * cos2 / pdf;
-
-        // std::clog << "----\nCos1: " << cos1 << ", Cos2: " << cos2 << std::endl;
-        // std::clog << "pdf: " << pdf << std::endl;
-        // vec::print(n);
-        // vec::print(wi);
-        // vec::print(sample.normal);
-        // vec::print(v);
-
-        return v;
+        return radiance * cos1 * cos2 / pdf;
       } else {
-        return Colour(0, 0, 0);
+        return Colour(0);
       }
     }
 

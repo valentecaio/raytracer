@@ -46,7 +46,7 @@ class Camera {
 
       for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {
-          auto pixel_colour = Colour(0, 0, 0);
+          auto pixel_colour = Colour(0);
           for (int sample_idx = 0; sample_idx < samples_per_pixel; ++sample_idx) {
             Ray r = ray_sample(i, j, sample_idx);
             // pixel_colour += ray_trace(r);
@@ -143,13 +143,13 @@ class Camera {
 
       EvalRecord eval = hit.object->material->evaluate(scene, r_in, hit);
 
-      // ray was bounced and has a fixed direction (simple reflection)
-      if (eval.ray != nullptr)
-        return eval.colour * ray_trace(*eval.ray, depth+1);
-
-      // ray was bounced and has a pdf (Diffuse)
-      else if (eval.pdf != nullptr)
+      // ray bounced and has a pdf (Diffuse)
+      if (eval.pdf != nullptr)
         return eval.colour * ray_trace(Ray(hit.p, eval.pdf->generate()), depth+1);
+
+      // ray bounced and has a fixed direction (reflection)
+      else if (eval.ray != nullptr)
+        return eval.colour * ray_trace(*eval.ray, depth+1);
 
       // ray was absorbed (Light and Phong materials)
       else
@@ -190,7 +190,7 @@ class Camera {
         EvalRecord eval = mat->evaluate(scene, ray, hit);
 
         // light source
-        if (std::dynamic_pointer_cast<LightMat>(hit.object->material)) {
+        if (std::dynamic_pointer_cast<LightMat>(mat)) {
           // TODO: we should only count direct light sources at the first hit.
           // if we do so, the noise decreases faster, but we lose the reflection
           // of light on the scene objects, which looks much less realistic.
@@ -199,22 +199,24 @@ class Camera {
           return eval.colour; // more noise, but more realistic
         }
 
-        // ray was absorbed (Phong materials)
-        if (eval.pdf == nullptr && eval.ray == nullptr) {
-          return L * eval.colour;
-        }
-
-        // path trace material
-
         // end path shooting a last ray to a light source
         Colour Le = scene.get_light_radiance(hit);
         L += Le * beta * eval.colour * mat->brdf_factor();
 
-        // prepare next path segment
-        ray = Ray(hit.p, eval.pdf->generate());
-        double pdf = eval.pdf->value(ray.direction());
-        double scatter_pdf = mat->scatter_pdf(hit.normal(), ray);
-        beta *= eval.colour * scatter_pdf / pdf;
+        if (eval.pdf) {
+          // ray bounced and has a pdf (Diffuse)
+          ray = Ray(hit.p, eval.pdf->generate());
+          double pdf = eval.pdf->value(ray.direction());
+          double scatter_pdf = mat->scatter_pdf(hit.normal(), ray);
+          beta *= eval.colour * scatter_pdf / pdf;
+        } else if (eval.ray) {
+          // ray bounced and has a fixed direction (simple reflection)
+          ray = *eval.ray;
+          beta *= eval.colour;
+        } else {
+          // ray was absorbed (Phong materials)
+          return eval.colour;
+        }
       }
       return L;
     }
@@ -227,7 +229,7 @@ class Camera {
       Point pixel_upper_left = viewport_origin + ((double)i * pixel_delta_u) + ((double)j * pixel_delta_v);
       Point pixel_pos = random::sample_quad(pixel_upper_left, pixel_delta_u, pixel_delta_v);
 
-      // TODO: stratified sampling not working properly
+      // TODO: stratified sampling not working
       // Point pixel_pos = random::sample_quad_stratified(pixel_upper_left, pixel_delta_u, pixel_delta_v, sample_idx, sqrt_spp);
 
       // ray center

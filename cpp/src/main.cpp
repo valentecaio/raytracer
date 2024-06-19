@@ -8,6 +8,7 @@
 #include "primitives/sphere.hpp"
 #include "camera.hpp"
 #include "material.hpp"
+#include "material_phong.hpp"
 #include "scene.hpp"
 
 using namespace raytracer;
@@ -91,7 +92,8 @@ void cornell_box(bool use_phong) {
     green  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.12, .45, .15));
     purple = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.85, .05, .85));
     // green  = (shared_ptr<Material>) make_shared<Metal>(Colour(.12, .45, .15), 0.3);
-    // mirror = (shared_ptr<Material>) make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
+    // mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
+    mirror = (shared_ptr<Material>) make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
   }
 
   // walls
@@ -106,15 +108,15 @@ void cornell_box(bool use_phong) {
   scene.add(make_shared<Box>(Point(265, 0, 295), Point(430, 330, 460), white));
 
   // sphere
-  // scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, mirror));
-  scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, purple));
+  scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, mirror));
+  // scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, purple));1
 
   /////////////////////
 
   Camera camera(scene);
 
   camera.aspect_ratio = 1;
-  camera.image_width = 400;
+  camera.image_width = 600;
   camera.samples_per_pixel = use_phong ? 4 : 5;
   camera.max_depth = 20;
   // camera.russian_roulette = false; // for tests
@@ -303,7 +305,7 @@ int main() {
     case 2: quads(true); break;
     case 3: bunny(); break;
 
-    // pathtracing materials (experimental)
+    // pathtracing materials
     case 10: spheres(false); break;
     case 11: cornell_box(false); break;
     case 12: quads(false); break;

@@ -54,8 +54,13 @@ class Box : public Primitive {
       return faces.objects[idx].get()->sample();
     }
 
+    Sample pdf_sample() const override {
+      int idx = random::rand_int(0, faces.objects.size() - 1);
+      auto t = std::static_pointer_cast<Quad>(faces.objects[idx]);
+      return Sample{t->sample(), t->normal};
+    }
+
     // TODO: support pdf sampling
-    // Sample pdf_sample() const override {}
     // double pdf_value(const Ray& r) const override {}
 
   private:

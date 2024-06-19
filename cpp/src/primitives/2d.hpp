@@ -16,6 +16,8 @@ namespace raytracer {
 // if a point with planar coordinates (alpha, beta) is inside the primitive boundaries.
 class Primitive2D : public Primitive {
   public:
+    Vec normal; // normal vector to the plane that contains the primitive, normalized
+
     virtual ~Primitive2D() = default;
 
     // the intersection of a ray with a 2D primitive is the intersection of the
@@ -60,7 +62,6 @@ class Primitive2D : public Primitive {
       return Sample{
         sample(),
         normal,
-        1.0 / area, // TODO: not used yet
       };
     }
 
@@ -101,7 +102,6 @@ class Primitive2D : public Primitive {
 
   // the following members are calculated by the set_constants method
   private:
-    Vec normal; // normal vector to the plane that contains the primitive, normalized
     Vec w;      // constant used to find the planar coordinates of a point
     double d;   // constant term of the plane equation [ax + by + cz = d]
 

@@ -50,10 +50,14 @@ class Mesh : public Primitive {
       return triangles.objects[idx]->sample();
     }
 
-    // TODO: support pdf sampling
-    // Sample pdf_sample() const override {}
-    // double pdf_value(const Ray& r) const override {}
+    Sample pdf_sample() const override {
+      int idx = random::rand_int(0, triangles.objects.size() - 1);
+      auto t = std::static_pointer_cast<Triangle>(triangles.objects[idx]);
+      return Sample{t->sample(), t->normal};
+    }
 
+    // TODO: support pdf sampling (properly)
+    // double pdf_value(const Ray& r) const override {}
 
   private:
     HittableList triangles;

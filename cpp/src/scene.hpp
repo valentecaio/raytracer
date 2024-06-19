@@ -64,11 +64,21 @@ class Scene : public Hittable {
       auto lmat = std::static_pointer_cast<LightMat>(light->material);
       double pdf = lmat->intensity / total_power;
 
-      // sample a point on the light source and a ray towards it
-      Sample sample = light->pdf_sample();
-      Vec wi = glm::normalize(sample.p - hit.p);
+      // sample a point on the light source
+      // spheres are point lights, other primitives are area lights
+      Sample sample;
+      Vec wi;
+      auto point_light = std::dynamic_pointer_cast<Sphere>(light);
+      if (point_light) {
+        sample.p = point_light->center;
+        wi = glm::normalize(sample.p - hit.p);
+        sample.normal = -wi;
+      } else {
+        sample = light->pdf_sample();
+        wi = glm::normalize(sample.p - hit.p);
+      }
       auto ray = Ray(hit.p, wi);
-      // pdf *= sample.pdf; // TODO: not working
+      // pdf *= light->pdf_value(ray); // TODO: not working, gets too dark
 
       // TODO: MIS not working
       // auto surface_pdf = make_shared<CosinePdf>(hit.normal());

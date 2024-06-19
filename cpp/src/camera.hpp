@@ -162,7 +162,8 @@ class Camera {
       auto beta = Colour(1); // ponderation factor for the path
 
       for (int depth = 0; depth < max_depth; ++depth) {
-        // russian roulette (https://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/Russian_Roulette_and_Splitting)
+        // russian roulette
+        // https://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/Russian_Roulette_and_Splitting
         if (russian_roulette && depth > min_depth) {
           // continuation probability (at least 10%)
           double p = utils::max({beta.r, beta.g, beta.b, 0.1});
@@ -192,11 +193,10 @@ class Camera {
         // light source
         if (std::dynamic_pointer_cast<LightMat>(mat)) {
           // TODO: we should only count direct light sources at the first hit.
-          // if we do so, the noise decreases faster, but we lose the reflection
-          // of light on the scene objects, which looks much less realistic.
-          // return (depth == 0) ? eval.colour : L;
-          // return eval.colour * beta;
-          return eval.colour; // more noise, but more realistic
+          // doing so decreases the variance, but we lose part of the light
+          // reflection on Diffuse scene objects, which looks less realistic.
+          return (depth == 0) ? eval.colour : L;
+          // return eval.colour; // more noise, but more realistic
         }
 
         // end path shooting a last ray to a light source

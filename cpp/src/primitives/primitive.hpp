@@ -14,7 +14,6 @@ class Sample {
   public:
     Point p;    // sample point in global coordinates
     Vec normal; // normal at the sample point
-    double pdf; // probability density function ponderation - TODO: not used yet
 };
 
 
@@ -29,7 +28,7 @@ class Primitive : public std::enable_shared_from_this<Primitive>, public Hittabl
     // returns a random point on the surface of the primitive
     virtual Point sample() const = 0;
 
-    // returns a random point on the primitive with its normal and PDF
+    // returns a random point on the primitive with its normal
     // TODO: transform in pure virtual
     virtual Sample pdf_sample() const {
       return Sample{sample(), Vec(0, 0, 0)};
@@ -38,7 +37,7 @@ class Primitive : public std::enable_shared_from_this<Primitive>, public Hittabl
     // returns the probability density function of the primitive for a given ray
     // TODO: transform in pure virtual
     virtual double pdf_value(const Ray& r) const {
-      return 0.0;
+      return 1.0;
     }
 };
 

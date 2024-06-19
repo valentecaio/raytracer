@@ -17,15 +17,15 @@ using namespace raytracer;
 // a scene with Phong and PhongMirror materials, composed by spheres and a point light
 void phong() {
   Scene scene;
-  scene.background = Colour(0.1, 0.1, 0.1);
+  scene.background = Colour(0.1);
 
   // light
-  scene.ambient_light = Colour(0.05, 0.05, 0.05);
-  auto material_light = make_shared<LightMat>(Colour(1, 1, 1), 1);
+  scene.ambient_light = Colour(0.05);
+  auto material_light = make_shared<LightMat>(Colour(1), 1);
   scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
   // background
-  auto material_background = make_shared<Phong>(Colour(0.1, 0.1, 0.1), 100);
+  auto material_background = make_shared<Phong>(Colour(0.1), 100);
   scene.add(make_shared<Quad>(Point(-400, -40, -40), Vec(800, 0, 0), Vec(0, 80, 0), material_background));
 
   // spheres
@@ -37,7 +37,7 @@ void phong() {
   scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.0), 0.5, material_center));
 
   // mirror sphere
-  auto material_mirror = make_shared<PhongMirror>(Colour(0.4, 0.4, 0.4), 1000, 0.02);
+  auto material_mirror = make_shared<PhongMirror>(Colour(0.4), 1000, 0.02);
   scene.add(make_shared<Sphere>(Point(-2.0, 0.5, -3.0), 1, material_mirror));
 
 
@@ -59,25 +59,25 @@ void phong() {
 // a scene with Diffuse and Metal/Mirror materials, composed with quads, boxes, a sphere and a quad light
 void cornell_box(bool use_phong) {
   Scene scene;
-  scene.background = Colour(0.1, 0.1, 0.1);
+  scene.background = Colour(0.1);
 
   // light in the middle
-  auto mlight = make_shared<LightMat>(Colour(1, 1, 1), 4);
+  auto mlight = make_shared<LightMat>(Colour(1), 3);
   // scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight));
-  // scene.add(make_shared<Sphere>(Point(278, 554, 278), 50, mlight));
+  // scene.add(make_shared<Sphere>(Point(278, 554, 278), 40, mlight));
 
   // light on the right
-  auto mlight2 = make_shared<LightMat>(Colour(1, 1, 0), 2);
+  auto mlight2 = make_shared<LightMat>(Colour(1, 1, 0), 20);
   scene.add(make_shared<Quad>(Point(200, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight2));
 
   // light on the left
-  auto mlight3 = make_shared<LightMat>(Colour(1, 0, 1), 2);
+  auto mlight3 = make_shared<LightMat>(Colour(1, 0, 1), 5);
   scene.add(make_shared<Quad>(Point(500, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight3));
   // scene.add(make_shared<Sphere>(Point(450, 554, 270), 50, mlight3));
 
   shared_ptr<Material> red, white, green, mirror, purple;
   if (use_phong) {
-    scene.ambient_light = Colour(0.03, 0.03, 0.03);
+    scene.ambient_light = Colour(0.03);
     red    = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 10);
     white  = (shared_ptr<Material>) make_shared<Phong>(Colour(.73, .73, .73), 100);
     green  = (shared_ptr<Material>) make_shared<Phong>(Colour(.12, .45, .15), 10);
@@ -85,8 +85,7 @@ void cornell_box(bool use_phong) {
     mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
     // mirror = (shared_ptr<Material>) make_shared<Phong>(Colour(0.8, 0.8, 0.8), 10);
   } else {
-    scene.ambient_light = Colour(0.1, 0.1, 0.1);
-    // scene.ambient_light = Colour(0.15, 0.15, 0.15); // scene is too dark
+    scene.ambient_light = Colour(0.1);
     red    = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.65, .05, .05));
     white  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.73, .73, .73));
     green  = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.12, .45, .15));
@@ -109,7 +108,7 @@ void cornell_box(bool use_phong) {
 
   // sphere
   scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, mirror));
-  // scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, purple));1
+  // scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, purple));
 
   /////////////////////
 
@@ -131,11 +130,11 @@ void cornell_box(bool use_phong) {
 // a scene with quads, a mirror, a strong ambient light and a point light
 void quads(bool use_phong) {
   Scene scene;
-  scene.background = Colour(0.1, 0.1, 0.1);
+  scene.background = Colour(0.1);
 
   // light
-  scene.ambient_light = Colour(0.1, 0.1, 0.1);
-  auto material_light = make_shared<LightMat>(Colour(1.0, 1.0, 1.0), 1.5);
+  scene.ambient_light = Colour(0.1);
+  auto material_light = make_shared<LightMat>(Colour(1), 1.5);
   scene.add(make_shared<Sphere>(Point(1, 2, 0), 0.2, material_light));
 
   shared_ptr<Material> left_red, back_green, upper_orange, lower_cyan, blue_metal;
@@ -181,7 +180,7 @@ void spheres(bool use_phong) {
   scene.background = Colour(0.1, 0.1, 0.5);
 
   // light
-  scene.ambient_light = Colour(0.05, 0.05, 0.05);
+  scene.ambient_light = Colour(0.05);
   auto material_light = make_shared<LightMat>(Colour(1, 1, 0.2), 1);
   scene.add(make_shared<Sphere>(Point( 2.0,    0.0, -2.0), 0.5, material_light));
 
@@ -221,16 +220,16 @@ void spheres(bool use_phong) {
 // a scene with a Mesh bunny, strong ambient light and a point Light
 void bunny() {
   Scene scene;
-  scene.background = Colour(0.1, 0.1, 0.1);
+  scene.background = Colour(0.1);
 
   // light
-  scene.ambient_light = Colour(0.2, 0.2, 0.2);
+  scene.ambient_light = Colour(0.2);
   auto material_light = make_shared<LightMat>(Colour(1, 1, 0), 2);
   scene.add(make_shared<Sphere>(Point(-0.05, 0.15, 0.2), 0.01, material_light));
   // scene.add(make_shared<Sphere>(Point(-0.05, 0.15, -0.2), 0.01, material_light));
 
   // bunny
-  auto bunny_material = make_shared<Phong>(Colour(0.5, 0.5, 0.5), 500);
+  auto bunny_material = make_shared<Phong>(Colour(0.5), 500);
   auto bunny = make_shared<raytracer::Mesh>("assets/bunny.obj", bunny_material);
   scene.add(bunny);
 
@@ -239,7 +238,7 @@ void bunny() {
   scene.add(make_shared<Sphere>(Point(0, -98, -20), 100, ground));
 
   // sphere
-  auto mirror = make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 1000, 0.02);
+  auto mirror = make_shared<PhongMirror>(Colour(0.8), 1000, 0.02);
   scene.add(make_shared<Sphere>(Point(-0.8, 0.5, -0.5), 0.4, mirror));
 
   /////////////////////
@@ -260,10 +259,10 @@ void bunny() {
 // a scene with Phong spheres, a Metal mirror and a point light
 void spheres_and_mirror() {
   Scene scene;
-  scene.background = Colour(0.1, 0.1, 0.1);
+  scene.background = Colour(0.1);
 
   // light
-  scene.ambient_light = Colour(0.05, 0.05, 0.05);
+  scene.ambient_light = Colour(0.05);
   auto material_light = make_shared<LightMat>(Colour(1, 1, 1), 3);
   scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
@@ -276,7 +275,7 @@ void spheres_and_mirror() {
   scene.add(make_shared<Sphere>(Point( 0.0,    0.0, -2.0), 0.5, material_center));
 
   // mirror quad
-  auto material_metal = make_shared<Metal>(Colour(0.4, 0.4, 0.4), 0.0);
+  auto material_metal = make_shared<Metal>(Colour(0.4), 0.0);
   scene.add(make_shared<Quad>(Point(-4, -1, -3), Vec(2, 0, -2), Vec(0, 2, 0), material_metal));
 
   /////////////////////
@@ -298,7 +297,7 @@ void spheres_and_mirror() {
 
 
 int main() {
-  switch (11) {
+  switch (12) {
     // phong materials
     case 0: phong(); break;
     case 1: cornell_box(true); break;

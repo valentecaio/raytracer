@@ -13,6 +13,9 @@ namespace raytracer {
 // A hittable sphere in 3D space.
 class Sphere : public Primitive {
   public:
+    Point center;
+    double radius;
+
     Sphere(const Point& _center, double _radius, shared_ptr<Material> _material)
       : center(_center), radius(std::max(0.0, _radius)) {
       // primitive properties
@@ -64,17 +67,16 @@ class Sphere : public Primitive {
       Point s = sample();
       return Sample{
         s,
-        (s - center) / radius, // normalized outward normal
-        1.0 / area,
+        normal(s),
       };
+    }
+    // normalized outward normal for point p in the surface of the sphere
+    Vec normal(Point p) const {
+      return (p - center) / radius;
     }
 
     // TODO: support pdf sampling
     // double pdf_value(const Ray& r) const override {}
-
-  private:
-    Point center;
-    double radius;
 };
 
 } // namespace raytracer

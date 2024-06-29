@@ -63,27 +63,27 @@ void cornell_box(bool use_phong) {
 
   // light in the middle
   auto mlight = make_shared<LightMat>(Colour(1), 3);
-  // scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight));
+  scene.add(make_shared<Quad>(Point(343, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight));
   // scene.add(make_shared<Sphere>(Point(278, 554, 278), 40, mlight));
 
   // light on the right
-  auto mlight2 = make_shared<LightMat>(Colour(1, 1, 0), 20);
-  scene.add(make_shared<Quad>(Point(200, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight2));
+  auto mlight2 = make_shared<LightMat>(Colour(1, 1, 0), 5);
+  // scene.add(make_shared<Quad>(Point(200, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight2));
 
   // light on the left
   auto mlight3 = make_shared<LightMat>(Colour(1, 0, 1), 5);
-  scene.add(make_shared<Quad>(Point(500, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight3));
+  // scene.add(make_shared<Quad>(Point(500, 554, 332), Vec(-130,0,0), Vec(0,0,-105), mlight3));
   // scene.add(make_shared<Sphere>(Point(450, 554, 270), 50, mlight3));
 
-  shared_ptr<Material> red, white, green, mirror, purple;
+  shared_ptr<Material> red, white, green, mirror, purple, mirror2;
   if (use_phong) {
     scene.ambient_light = Colour(0.03);
     red    = (shared_ptr<Material>) make_shared<Phong>(Colour(.65, .05, .05), 10);
     white  = (shared_ptr<Material>) make_shared<Phong>(Colour(.73, .73, .73), 100);
     green  = (shared_ptr<Material>) make_shared<Phong>(Colour(.12, .45, .15), 10);
     // green  = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(.12, .45, .15), 10, 0.1);
-    mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
-    // mirror = (shared_ptr<Material>) make_shared<Phong>(Colour(0.8, 0.8, 0.8), 10);
+    mirror = (shared_ptr<Material>) make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.0);
+    // mirror = (shared_ptr<Material>) make_shared<PhongMirror>(Colour(0.8, 0.8, 0.8), 10, 0.1);
   } else {
     scene.ambient_light = Colour(0.1);
     red    = (shared_ptr<Material>) make_shared<Diffuse>(Colour(.65, .05, .05));
@@ -110,15 +110,19 @@ void cornell_box(bool use_phong) {
   scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, mirror));
   // scene.add(make_shared<Sphere>(Point(400, 410, 350), 80, purple));
 
+  // sphere on the bottom right
+  // mirror2 = (shared_ptr<Material>) make_shared<Metal>(Colour(0.8, 0.8, 0.8), 0.5);
+  // scene.add(make_shared<Sphere>(Point(100, 100, 350), 100, mirror2));
+
   /////////////////////
 
   Camera camera(scene);
 
   camera.aspect_ratio = 1;
   camera.image_width = 600;
-  camera.samples_per_pixel = use_phong ? 4 : 5;
+  camera.samples_per_pixel = use_phong ? 4 : 50;
   camera.max_depth = 20;
-  // camera.russian_roulette = false; // for tests
+  camera.russian_roulette = true; // use false for tests
   camera.vfov = 40;
   camera.look_from = Point(278, 278, -800);
   camera.look_at = Point(278, 278, 0);
@@ -263,7 +267,7 @@ void spheres_and_mirror() {
 
   // light
   scene.ambient_light = Colour(0.05);
-  auto material_light = make_shared<LightMat>(Colour(1, 1, 1), 3);
+  auto material_light = make_shared<LightMat>(Colour(1), 3);
   scene.add(make_shared<Sphere>(Point(2.5, 0.7, -2.0), 0.1, material_light));
 
   // spheres
@@ -297,7 +301,7 @@ void spheres_and_mirror() {
 
 
 int main() {
-  switch (12) {
+  switch (11) {
     // phong materials
     case 0: phong(); break;
     case 1: cornell_box(true); break;

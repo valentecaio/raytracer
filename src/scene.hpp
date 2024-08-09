@@ -9,7 +9,6 @@
 
 namespace raytracer {
 
-
 // A hittable scene in 3D space.
 class Scene : public Hittable {
   public:
